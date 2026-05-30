@@ -1,15 +1,22 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const basePath = process.env.BASE_PATH || "";
+const root = dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "export",
-  // for Github Pages
   reactStrictMode: false,
-  assetPrefix: process.env.BASE_PATH || "",
-  basePath: process.env.BASE_PATH || "",
+  assetPrefix: basePath,
+  basePath,
   trailingSlash: true,
-  publicRuntimeConfig: {
-    root: process.env.BASE_PATH || "",
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
   },
-  optimizeFonts: false,
+  turbopack: {
+    root,
+  },
 };
 
 export default nextConfig;

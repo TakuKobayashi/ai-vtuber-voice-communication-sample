@@ -1,15 +1,6 @@
-import getConfig from 'next/config';
-
 /**
- * github pagesに公開時にアセットを読み込めるようにするため、
- * 環境変数を見てURLにリポジトリ名を追加する
+ * Prefixes public asset URLs with the configured GitHub Pages base path.
  */
 export function buildUrl(path: string): string {
-  const {
-    publicRuntimeConfig,
-  }: {
-    publicRuntimeConfig: { root: string };
-  } = getConfig();
-
-  return publicRuntimeConfig.root + path;
+  return `${process.env.NEXT_PUBLIC_BASE_PATH || ''}${path}`;
 }
