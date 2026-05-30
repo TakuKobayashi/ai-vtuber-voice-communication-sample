@@ -8,10 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --config .prettierrc --write \"src/**/*.{ts,js,tsx,jsx}\"",
-    "deploy": "gh-pages -d out -t true",
-    "deploy:github": "npm run build && gh-pages -d out -t true",
-    "deploy:cloudflare": "npm run build && wrangler deploy",
-    "preview:cloudflare": "npm run build && wrangler dev"
+    "deploy:cloudflare": "next build && wrangler deploy",
+    "deploy:github": "next build && gh-pages -d out -t true",
+    "preview:cloudflare": "next build && wrangler dev"
   },
   "dependencies": {
     "@charcoal-ui/icons": "^5.12.0",
@@ -34,7 +33,7 @@
     "eslint-config-next": "16.2.6",
     "gh-pages": "^6.3.0",
     "prettier": "^3.8.3",
-    "wrangler": "^4.0.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.95.0"
   }
 }

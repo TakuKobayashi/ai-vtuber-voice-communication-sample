@@ -3,32 +3,38 @@ on:
     branches:
       - master
 
-name: Deploy Github Pages
+name: Deploy GitHub Pages
+
 jobs:
-  builddeploy:
-    name: Data Import and Export
+  deploy:
+    name: Build and Deploy to GitHub Pages
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        root-project-path: [./web]
     steps:
-    - uses: actions/checkout@v4
-    - name: setup ubuntu
-      run: |
-        sudo apt-get --quiet update --yes
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 24
-        cache: pnpm
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile=false
-    - name: build html
-      working-directory: ${{ matrix.root-project-path }}
-      run: pnpm run build
-    - name: Deploy
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-        publish_branch: gh-pages
-        publish_dir: ${{ matrix.root-project-path }}/out
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Build web
+        working-directory: web
+        env:
+          BASE_PATH: /ai-vtuber-voice-communication-sample
+        run: pnpm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          publish_branch: gh-pages
+          publish_dir: web/out
