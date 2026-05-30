@@ -10,23 +10,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x]
         root-project-path: [./web]
     steps:
     - uses: actions/checkout@v4
     - name: setup ubuntu
       run: |
         sudo apt-get --quiet update --yes
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
-    - name: yarn install
-      working-directory: ${{ matrix.root-project-path }}
-      run: yarn install
+        node-version: 24
+        cache: pnpm
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile=false
     - name: build html
       working-directory: ${{ matrix.root-project-path }}
-      run: yarn run build
+      run: pnpm run build
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v4
       with:
