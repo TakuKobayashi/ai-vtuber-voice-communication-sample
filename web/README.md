@@ -34,3 +34,25 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Deploy
+
+This project exports static files to `out/` with `npm run build`.
+
+```bash
+npm run deploy:github
+```
+
+Deploys the latest `out/` build to GitHub Pages via `gh-pages`.
+
+```bash
+npm run deploy:cloudflare
+```
+
+Deploys the latest `out/` build to Cloudflare Workers Static Assets. The Workers configuration is in `wrangler.jsonc`, and `assets.directory` points to `./out`.
+
+```bash
+npm run preview:cloudflare
+```
+
+Builds and previews the Workers Assets deployment locally with Wrangler.
