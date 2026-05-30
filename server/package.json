@@ -6,13 +6,15 @@
     "dev": "wrangler dev",
     "build": "tsc",
     "deploy:cloudflare": "wrangler deploy",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "format": "prettier --config .prettierrc --write \"src/**/*.{ts,js}\""
   },
   "dependencies": {
     "hono": "^4.7.11"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250525.0",
+    "prettier": "^3.8.3",
     "typescript": "^5.8.3",
     "wrangler": "^4.19.0"
   }
