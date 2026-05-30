@@ -1,8 +1,6 @@
 # 実行環境
 
-[こちら](https://takuhackathons.github.io/QiitaHackathon2024/) より遊ぶことができます
 
-* https://takuhackathons.github.io/QiitaHackathon2024/
 
 # 動かし方メモ
 
@@ -47,45 +45,6 @@ yarn run dev
 ```
 
 上記の [VOICEVOXの起動](#VOICEVOXの起動) が行われていれば、問題なくweb から音声合成が行われます
-
-## サーバー内での動かし方メモ
-
-### VOICEVOX
-
-まずは上記の [VOICEVOXの起動](#VOICEVOXの起動) を行う
-
-*  VOICEVOXのサーバーはポート番号が`50021`番で動いているのでリバースプロ式または`50021`番ポートを解放する
-* VOICEVOXのcorsの設定を更新しないと外部webからVOICEVOXのAPIを実行することができない。VOICEVOXが起動しているサーバー内で以下のコマンドを実行してCORSの設定を更新する
-
-```
-curl -X 'POST' 'http://localhost:50021/setting' -H 'accept: */*' -H 'Content-Type: application/x-www-form-urlencoded' -d 'cors_policy_mode=all'
-```
-
-* VOICEVOXのCORSの設定を更新したのでVOICEVOXのサーバーを再起動します。再起動するために以下のコマンドを実行します。
-
-```
-docker-compose stop
-```
-
-または
-
-```
-docker compose stop
-```
-
-その後
-
-```
-docker-compose up -d
-```
-
-または
-
-```
-docker compose up -d
-```
-
-を実行して再起動する
 
 # 各種使用ツールや素材一覧
 
