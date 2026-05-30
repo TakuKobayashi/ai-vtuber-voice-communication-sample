@@ -10,10 +10,8 @@
     "dev:web": "pnpm --filter web dev",
     "dev:server": "pnpm --filter server dev",
     "build:web": "pnpm --filter web build",
-    "build:server": "pnpm --filter server build",
-    "deploy:web": "pnpm --filter web deploy:cloudflare",
-    "deploy:server": "pnpm --filter server deploy:cloudflare",
-    "deploy:github": "pnpm --filter web deploy:github",
+    "deploy:cloudflare": "pnpm build:web && pnpm --filter server deploy:cloudflare",
+    "deploy:github": "pnpm build:web && pnpm --filter web deploy:github",
     "lint": "pnpm --filter web lint"
   }
 }

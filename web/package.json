@@ -1,5 +1,5 @@
 {
-  "name": "ai-vtuber-voice-communication-sample",
+  "name": "web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,10 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "format": "prettier --config .prettierrc --write \"src/**/*.{ts,js,tsx,jsx}\"",
-    "deploy:cloudflare": "next build && wrangler deploy",
-    "deploy:github": "next build && gh-pages -d out -t true",
-    "preview:cloudflare": "next build && wrangler dev"
+    "format": "prettier --config .prettierrc --write \"src/**/*.{ts,js,tsx,jsx}\""
   },
   "dependencies": {
     "@charcoal-ui/icons": "^5.12.0",
@@ -33,7 +30,6 @@
     "eslint-config-next": "16.2.6",
     "gh-pages": "^6.3.0",
     "prettier": "^3.8.3",
-    "typescript": "^6.0.3",
-    "wrangler": "^4.95.0"
+    "typescript": "^6.0.3"
   }
 }
