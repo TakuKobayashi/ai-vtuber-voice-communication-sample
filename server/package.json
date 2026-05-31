@@ -6,14 +6,17 @@
     "dev": "wrangler dev",
     "build": "tsc",
     "deploy:cloudflare": "wrangler deploy",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "format": "prettier --config .prettierrc --write \"src/**/*.{ts,js}\""
   },
   "dependencies": {
-    "hono": "^4.7.11"
+    "groq-sdk": "^1.2.1",
+    "hono": "^4.12.23"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250525.0",
-    "typescript": "^5.8.3",
-    "wrangler": "^4.19.0"
+    "@cloudflare/workers-types": "^4.20260530.1",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.95.0"
   }
 }
