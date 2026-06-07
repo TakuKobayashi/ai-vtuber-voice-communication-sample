@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "ai-vtuber-voice-communication-sample-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,6 +13,7 @@
     "@charcoal-ui/icons": "^5.12.0",
     "@gltf-transform/core": "^4.3.0",
     "@pixiv/three-vrm": "^3.5.3",
+    "jotai": "^2.12.5",
     "lodash": "^4.18.1",
     "next": "16.2.6",
     "react": "^19.2.6",

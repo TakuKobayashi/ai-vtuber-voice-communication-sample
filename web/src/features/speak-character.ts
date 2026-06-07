@@ -31,7 +31,11 @@ export async function speakCharacter(
   const synthesisQueryUrl = new URL(`${voiceVoxRootUrl}/synthesis`);
   synthesisQueryUrl.search = synthesisQueryParams.toString();
   const responseSynthesis = await fetch(synthesisQueryUrl.toString(), {
-    body: responseAudioQueryJson,
+    method: 'POST', // BUG FIX: methodが抜けていたため追加
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(responseAudioQueryJson),
   });
   const responseSynthesisBinary = await responseSynthesis.arrayBuffer();
   return viewer.model?.speak(responseSynthesisBinary, expression);

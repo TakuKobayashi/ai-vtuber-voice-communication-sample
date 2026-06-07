@@ -1,34 +1,64 @@
 'use client';
 
 import { useContext, useState, useEffect } from 'react';
+import { useAtom } from 'jotai';
 import { VrmViewer } from '../compoments/vrmViewer';
 import { ViewerContext } from '../features/vrmViewer/viewerContext';
 import { IconButton } from '../compoments/iconButton';
 import { speakCharacter, loadSpeackers } from '../features/speak-character';
+import { speakersAtom, SpeakerStyle } from '../lib/speakersAtom';
 
 export default function Home() {
   const { viewer } = useContext(ViewerContext);
-  const [speakerStyle, setSpeakerStyle] = useState<{ [key: string]: any }>({});
+  const [speakers, setSpeakers] = useAtom(speakersAtom);
+  const [speakerStyle, setSpeakerStyle] = useState<SpeakerStyle | null>(null);
   const [userMessage, setUserMessage] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const speakers = await loadSpeackers();
+      // jotai atom にキャッシュ済みならAPIを叩かない
+      const speakerList = speakers ?? (await loadSpeackers());
+      if (!speakers) {
+        setSpeakers(speakerList);
+      }
+
       const targetSpeackerName = 'ずんだもん';
-      const targetSpeacker = speakers.find((speacker: any) => speacker.name === targetSpeackerName) || {};
+      const targetSpeacker = speakerList.find((s: any) => s.name === targetSpeackerName) ?? {};
       // 'ノーマル', 'あまあま', 'ツンツン', 'セクシー', 'ささやき', 'ヒソヒソ' がある
       const targetSpeackerStyle = targetSpeacker.styles?.find((style: any) => style.name === 'あまあま');
       if (targetSpeackerStyle) {
         setSpeakerStyle(targetSpeackerStyle);
       }
     })();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const onTestClick = async () => {
-    if (speakerStyle.id) {
-      const groqChatResponse = await fetch('/groq/chat', { method: 'POST', body: JSON.stringify({ message: userMessage }) });
+  const onSendClick = async () => {
+    if (!speakerStyle?.id || !userMessage || isProcessing) return;
+
+    setIsProcessing(true);
+    try {
+      // Groq API 経由でAIの返答を取得 (/api プレフィックス必須: CF Workers の静的アセットと共存するため)
+      const groqChatResponse = await fetch('/api/groq/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage }),
+      });
+
+      if (!groqChatResponse.ok) {
+        console.error('Groq API error:', groqChatResponse.status, await groqChatResponse.text());
+        return;
+      }
+
       const groqChatResponseJson = await groqChatResponse.json();
-      await speakCharacter(speakerStyle.id, userMessage, viewer);
+      // BUG FIX: userMessage ではなく AIの返答テキストをしゃべらせる
+      const aiReplyText: string = groqChatResponseJson?.choices?.[0]?.message?.content ?? '';
+
+      if (aiReplyText) {
+        await speakCharacter(speakerStyle.id, aiReplyText, viewer);
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -45,16 +75,16 @@ export default function Home() {
                   backgroundColor: 'rgb(255,97,127)',
                 }}
                 className="bg-secondary hover:bg-secondary-hover active:bg-secondary-press disabled:bg-secondary-disabled"
-                isProcessing={false}
-                disabled={false}
-                onClick={onTestClick}
+                isProcessing={isProcessing}
+                disabled={isProcessing}
+                onClick={onSendClick}
               />
 
               <input
                 type="text"
                 placeholder="聞きたいことをいれてね"
                 onChange={(e) => setUserMessage(e.target.value)}
-                disabled={false}
+                disabled={isProcessing}
                 style={{
                   backgroundColor: '#FFFFFF',
                   color: 'rgb(81,64,98)',
@@ -76,9 +106,9 @@ export default function Home() {
                   backgroundColor: 'rgb(255,97,127)',
                 }}
                 className="bg-secondary hover:bg-secondary-hover active:bg-secondary-press disabled:bg-secondary-disabled"
-                isProcessing={false}
-                disabled={userMessage.length <= 0}
-                onClick={onTestClick}
+                isProcessing={isProcessing}
+                disabled={userMessage.length <= 0 || isProcessing}
+                onClick={onSendClick}
               />
             </div>
           </div>

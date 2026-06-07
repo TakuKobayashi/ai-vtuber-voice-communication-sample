@@ -16,7 +16,7 @@ app.get('/', (c) => {
   });
 });
 
-app.post('/groq/chat', async (c) => {
+app.post('/api/groq/chat', async (c) => {
   const bodyJson = await parseJsonBody(c.req);
   const { GROQ_API_KEY } = env(c);
   const groq = new Groq({ apiKey: GROQ_API_KEY as string });
