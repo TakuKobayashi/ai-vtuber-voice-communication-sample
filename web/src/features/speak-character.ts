@@ -19,9 +19,9 @@ export async function speakCharacter(
     speaker: speackerId.toString(),
   });
   const audioQueryUrl = new URL(`${voiceVoxRootUrl}/audio_query`);
-  audioQueryUrl.search = audioQueryParams.toString()
+  audioQueryUrl.search = audioQueryParams.toString();
   const responseAudioQuery = await fetch(audioQueryUrl.toString(), {
-    method: "POST",
+    method: 'POST',
   });
   const responseAudioQueryJson = await responseAudioQuery.json();
 
@@ -29,7 +29,7 @@ export async function speakCharacter(
     speaker: speackerId.toString(),
   });
   const synthesisQueryUrl = new URL(`${voiceVoxRootUrl}/synthesis`);
-  synthesisQueryUrl.search = synthesisQueryParams.toString()
+  synthesisQueryUrl.search = synthesisQueryParams.toString();
   const responseSynthesis = await fetch(synthesisQueryUrl.toString(), {
     body: responseAudioQueryJson,
   });
