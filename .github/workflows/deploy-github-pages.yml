@@ -9,6 +9,7 @@ jobs:
   deploy:
     name: Build and Deploy to GitHub Pages
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v6
 
@@ -38,3 +39,4 @@ jobs:
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           publish_branch: gh-pages
           publish_dir: web/out
+          enable_jekyll: false
