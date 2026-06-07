@@ -1,4 +1,14 @@
-import { DirectionalLight, WebGLRenderer, Clock, PerspectiveCamera, Scene, AmbientLight, Object3D, Vector3, SRGBColorSpace } from 'three';
+import {
+  DirectionalLight,
+  WebGLRenderer,
+  Timer,
+  PerspectiveCamera,
+  Scene,
+  AmbientLight,
+  Object3D,
+  Vector3,
+  SRGBColorSpace,
+} from 'three';
 import { Model } from './model';
 import { loadVRMAnimation } from '../../lib/VRMAnimation/loadVRMAnimation';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -14,7 +24,7 @@ export class Viewer {
   public model?: Model;
 
   private _renderer?: WebGLRenderer;
-  private _clock: Clock;
+  private _timer: Timer;
   private _scene: Scene;
   private _camera?: PerspectiveCamera;
   private _cameraControls?: OrbitControls;
@@ -34,9 +44,8 @@ export class Viewer {
     const ambientLight = new AmbientLight(0xffffff, 1);
     scene.add(ambientLight);
 
-    // animate
-    this._clock = new Clock();
-    this._clock.start();
+    // animate — THREE.Timer は Clock の後継でdeprecate警告が出ない
+    this._timer = new Timer();
   }
 
   public loadVrm(url: string) {
@@ -140,8 +149,10 @@ export class Viewer {
 
   public update = () => {
     requestAnimationFrame(this.update);
-    const delta = this._clock.getDelta();
-    // update vrm components
+    // THREE.Timer: update() で内部時刻を進め、getDelta() で差分を取得する
+    this._timer.update();
+    const delta = this._timer.getDelta();
+
     if (this.model) {
       this.model.update(delta);
     }

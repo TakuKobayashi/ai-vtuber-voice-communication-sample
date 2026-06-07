@@ -5,7 +5,7 @@ import { useAtom } from 'jotai';
 import { VrmViewer } from '../compoments/vrmViewer';
 import { ViewerContext } from '../features/vrmViewer/viewerContext';
 import { IconButton } from '../compoments/iconButton';
-import { speakCharacter, loadSpeackers } from '../features/speak-character';
+import { loadSpeackers, speakCharacterStream } from '../features/speak-character';
 import { speakersAtom, SpeakerStyle } from '../lib/speakersAtom';
 
 export default function Home() {
@@ -38,7 +38,8 @@ export default function Home() {
 
     setIsProcessing(true);
     try {
-      // Groq API 経由でAIの返答を取得 (/api プレフィックス必須: CF Workers の静的アセットと共存するため)
+      // Groq API に SSE ストリームとして問い合わせる
+      // /api プレフィックス必須: CF Workers の静的アセットと API が同居するため
       const groqChatResponse = await fetch('/api/groq/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,13 +51,8 @@ export default function Home() {
         return;
       }
 
-      const groqChatResponseJson = await groqChatResponse.json();
-      // BUG FIX: userMessage ではなく AIの返答テキストをしゃべらせる
-      const aiReplyText: string = groqChatResponseJson?.choices?.[0]?.message?.content ?? '';
-
-      if (aiReplyText) {
-        await speakCharacter(speakerStyle.id, aiReplyText, viewer);
-      }
+      // SSE ストリームを受け取り、センテンス単位で並列合成→順次再生
+      await speakCharacterStream(speakerStyle.id, groqChatResponse, viewer);
     } finally {
       setIsProcessing(false);
     }
@@ -68,12 +64,12 @@ export default function Home() {
       <div style={{ position: 'absolute', bottom: 0, zIndex: 20, width: '100vw' }}>
         <div style={{ backgroundColor: 'rgb(251,226,202)', color: '#000000' }}>
           <div style={{ marginLeft: 'auto', marginRight: 'auto', maxWidth: '56rem', padding: '16px' }}>
-            <div style={{ display: 'grid', gridAutoFlow: 'column', gap: '8px', gridTemplateColumns: 'min-content 1fr min-content' }}>
+            <div
+              style={{ display: 'grid', gridAutoFlow: 'column', gap: '8px', gridTemplateColumns: 'min-content 1fr min-content' }}
+            >
               <IconButton
                 iconName="24/Microphone"
-                style={{
-                  backgroundColor: 'rgb(255,97,127)',
-                }}
+                style={{ backgroundColor: 'rgb(255,97,127)' }}
                 className="bg-secondary hover:bg-secondary-hover active:bg-secondary-press disabled:bg-secondary-disabled"
                 isProcessing={isProcessing}
                 disabled={isProcessing}
@@ -102,9 +98,7 @@ export default function Home() {
 
               <IconButton
                 iconName="24/Send"
-                style={{
-                  backgroundColor: 'rgb(255,97,127)',
-                }}
+                style={{ backgroundColor: 'rgb(255,97,127)' }}
                 className="bg-secondary hover:bg-secondary-hover active:bg-secondary-press disabled:bg-secondary-disabled"
                 isProcessing={isProcessing}
                 disabled={userMessage.length <= 0 || isProcessing}
