@@ -64,9 +64,7 @@ export default function Home() {
       <div style={{ position: 'absolute', bottom: 0, zIndex: 20, width: '100vw' }}>
         <div style={{ backgroundColor: 'rgb(251,226,202)', color: '#000000' }}>
           <div style={{ marginLeft: 'auto', marginRight: 'auto', maxWidth: '56rem', padding: '16px' }}>
-            <div
-              style={{ display: 'grid', gridAutoFlow: 'column', gap: '8px', gridTemplateColumns: 'min-content 1fr min-content' }}
-            >
+            <div style={{ display: 'grid', gridAutoFlow: 'column', gap: '8px', gridTemplateColumns: 'min-content 1fr min-content' }}>
               <IconButton
                 iconName="24/Microphone"
                 style={{ backgroundColor: 'rgb(255,97,127)' }}

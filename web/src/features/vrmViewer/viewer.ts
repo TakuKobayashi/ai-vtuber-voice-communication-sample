@@ -1,14 +1,4 @@
-import {
-  DirectionalLight,
-  WebGLRenderer,
-  Timer,
-  PerspectiveCamera,
-  Scene,
-  AmbientLight,
-  Object3D,
-  Vector3,
-  SRGBColorSpace,
-} from 'three';
+import { DirectionalLight, WebGLRenderer, Timer, PerspectiveCamera, Scene, AmbientLight, Object3D, Vector3, SRGBColorSpace } from 'three';
 import { Model } from './model';
 import { loadVRMAnimation } from '../../lib/VRMAnimation/loadVRMAnimation';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
