@@ -26,6 +26,8 @@ export default function Home() {
 
   const onTestClick = async () => {
     if (speakerStyle.id) {
+      const groqChatResponse = await fetch('/groq/chat', { method: 'POST', body: JSON.stringify({ message: userMessage }) });
+      const groqChatResponseJson = await groqChatResponse.json();
       await speakCharacter(speakerStyle.id, userMessage, viewer);
     }
   };
