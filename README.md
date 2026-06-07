@@ -2,6 +2,10 @@
 
 VRM 3D アバターにテキストを入力すると、Groq LLM が返答を生成し、VOICEVOX で音声合成してアバターが喋るサンプルプロジェクトです。
 
+デモページはこちらです
+
+https://ai-vtuber-voice-communication-sample.taptappun.workers.dev/
+
 ## 構成
 
 ```
