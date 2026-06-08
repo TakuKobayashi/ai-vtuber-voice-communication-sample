@@ -48,7 +48,7 @@ export function VrmSelector({ onVrmChange }: Props) {
     if (e.target.value === '__add__') {
       setModalOpen(true);
       // select の値を元に戻す
-      e.target.value = selectedVrm.url;
+      if (selectedVrm) e.target.value = selectedVrm.url;
       return;
     }
     const entry = vrmList.find((v) => v.url === e.target.value);
@@ -78,7 +78,7 @@ export function VrmSelector({ onVrmChange }: Props) {
   return (
     <>
       {/* VRM プルダウン */}
-      <select ref={selectRef} style={selectStyle} value={selectedVrm.url} onChange={onSelectChange}>
+      <select ref={selectRef} style={selectStyle} value={selectedVrm?.url ?? ''} onChange={onSelectChange}>
         {vrmList.map((v: VrmEntry) => (
           <option key={v.url} value={v.url}>
             {v.isCustom ? `📎 ${v.label}` : `🧊 ${v.label}`}
