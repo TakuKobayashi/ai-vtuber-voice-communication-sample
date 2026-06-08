@@ -18,14 +18,12 @@ export async function loadSpeackers(): Promise<any[]> {
 // ----------------------------------------------------------------
 
 async function synthesizeAudio(speackerId: number, text: string): Promise<ArrayBuffer> {
-  // Step 1: audio_query
   const audioQueryUrl = new URL(`${location.origin}${voiceVoxApiBase}/audio_query`);
   audioQueryUrl.searchParams.set('text', text);
   audioQueryUrl.searchParams.set('speaker', speackerId.toString());
   const audioQueryRes = await fetch(audioQueryUrl.toString(), { method: 'POST' });
   const audioQuery = await audioQueryRes.json();
 
-  // Step 2: synthesis
   const synthesisUrl = new URL(`${location.origin}${voiceVoxApiBase}/synthesis`);
   synthesisUrl.searchParams.set('speaker', speackerId.toString());
   const synthesisRes = await fetch(synthesisUrl.toString(), {
@@ -51,17 +49,20 @@ export async function speakCharacter(
 }
 
 // ----------------------------------------------------------------
-// Groq SSE ストリームを受け取り、文単位で並列合成→順次再生する
+// SSE ストリームパーサー
 //
-// 仕組み:
-//   1. Groq から delta テキストをストリームで受信しながらセンテンスに分割
-//   2. センテンスが確定した瞬間に VoiceVox 合成を非同期で開始（Promise をキューに積む）
-//   3. キューを先頭から順に await して、合成完了次第すぐ再生
-//      → 後のセンテンスが先に合成完了しても、順番通りに再生される
+// サーバーが送出するイベント:
+//   {"type":"emotion","value":"happy"}
+//   {"type":"delta","value":"テキスト断片"}
+//   [DONE]
 // ----------------------------------------------------------------
 
-/** SSE ストリームから delta 文字列を順に yield するジェネレータ */
-async function* readGroqStream(response: Response): AsyncGenerator<string> {
+export type GroqStreamEvent =
+  | { type: 'emotion'; value: EmotionType }
+  | { type: 'delta'; value: string }
+  | { type: 'done' };
+
+async function* readGroqStream(response: Response): AsyncGenerator<GroqStreamEvent> {
   const reader = response.body!.getReader();
   const decoder = new TextDecoder();
   let buf = '';
@@ -77,10 +78,17 @@ async function* readGroqStream(response: Response): AsyncGenerator<string> {
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const payload = line.slice(6).trim();
-      if (payload === '[DONE]') return;
+      if (payload === '[DONE]') {
+        yield { type: 'done' };
+        return;
+      }
       try {
-        const parsed = JSON.parse(payload) as { delta: string };
-        if (parsed.delta) yield parsed.delta;
+        const parsed = JSON.parse(payload) as { type: string; value: string };
+        if (parsed.type === 'emotion') {
+          yield { type: 'emotion', value: parsed.value as EmotionType };
+        } else if (parsed.type === 'delta') {
+          yield { type: 'delta', value: parsed.value };
+        }
       } catch {
         // malformed chunk — skip
       }
@@ -89,12 +97,10 @@ async function* readGroqStream(response: Response): AsyncGenerator<string> {
 }
 
 /**
- * 句読点・改行でセンテンスの区切りを検出するシンプルな分割器。
- * テキストを蓄積して、区切りが見つかったらセンテンスとして返す。
+ * 句読点・改行でセンテンスの区切りを検出する分割器
  */
 class SentenceBuffer {
   private buf = '';
-  // 句読点（日本語・英語）・改行を区切りとする
   private static readonly DELIMITERS = /[。．！？!?\n]/;
 
   push(text: string): string[] {
@@ -126,38 +132,45 @@ class SentenceBuffer {
 /**
  * Groq SSE ストリームを受け取り、センテンス単位で並列合成→順次再生する。
  *
- * @param speackerId   VoiceVox の話者 ID
- * @param groqResponse /api/groq/chat の Response (SSE)
- * @param viewer       Viewer インスタンス
- * @param expression   感情表現
- * @returns 全センテンスの再生が完了したら resolve する Promise
+ * @param speackerId      VoiceVox の話者 ID
+ * @param groqResponse    /api/groq/chat の Response (SSE)
+ * @param viewer          Viewer インスタンス
+ * @param onEmotion       感情が確定したときに呼ばれるコールバック
+ * @param onDelta         テキスト断片が届くたびに呼ばれるコールバック（メッセージウィンドウ表示用）
  */
 export async function speakCharacterStream(
   speackerId: number,
   groqResponse: Response,
   viewer: Viewer,
-  expression: EmotionType = 'neutral',
+  onEmotion?: (emotion: EmotionType) => void,
+  onDelta?: (delta: string) => void,
 ): Promise<void> {
-  // 合成 Promise のキュー（順序保証のため）
-  const synthesisQueue: Promise<ArrayBuffer>[] = [];
+  const synthesisQueue: { promise: Promise<ArrayBuffer>; expression: EmotionType }[] = [];
   const sentenceBuffer = new SentenceBuffer();
+  let currentEmotion: EmotionType = 'neutral';
 
-  /** センテンスが確定したら即座に合成を開始してキューに積む */
   const enqueueSynthesis = (sentence: string) => {
-    synthesisQueue.push(synthesizeAudio(speackerId, sentence));
+    synthesisQueue.push({
+      promise: synthesizeAudio(speackerId, sentence),
+      expression: currentEmotion,
+    });
   };
 
-  // SSE を読みながらセンテンス分割・合成開始
-  for await (const delta of readGroqStream(groqResponse)) {
-    const sentences = sentenceBuffer.push(delta);
-    for (const s of sentences) enqueueSynthesis(s);
+  for await (const event of readGroqStream(groqResponse)) {
+    if (event.type === 'emotion') {
+      currentEmotion = event.value;
+      onEmotion?.(currentEmotion);
+    } else if (event.type === 'delta') {
+      onDelta?.(event.value);
+      const sentences = sentenceBuffer.push(event.value);
+      for (const s of sentences) enqueueSynthesis(s);
+    }
   }
-  // バッファに残った末尾テキストを flush
+
   for (const s of sentenceBuffer.flush()) enqueueSynthesis(s);
 
-  // キューを先頭から順に再生（後のセンテンスが先に合成済みでも順番通り）
-  for (const synthesisPromise of synthesisQueue) {
-    const buffer = await synthesisPromise;
+  for (const { promise, expression } of synthesisQueue) {
+    const buffer = await promise;
     await viewer.model?.speak(buffer, expression);
   }
 }

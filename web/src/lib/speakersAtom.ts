@@ -13,8 +13,11 @@ export type Speaker = {
   version?: string;
 };
 
-/**
- * Voicevox から取得したスピーカー一覧をセッション中キャッシュするatom。
- * null = 未取得, Speaker[] = 取得済み
- */
+/** Voicevox から取得したスピーカー一覧キャッシュ */
 export const speakersAtom = atom<Speaker[] | null>(null);
+
+/** 現在選択中のスピーカー */
+export const selectedSpeakerAtom = atom<Speaker | null>(null);
+
+/** 現在選択中のスタイル */
+export const selectedSpeakerStyleAtom = atom<SpeakerStyle | null>(null);
