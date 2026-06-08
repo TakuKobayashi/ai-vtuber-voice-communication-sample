@@ -20,11 +20,19 @@ const EMOTION_LABEL: Record<EmotionType, string> = {
 };
 
 const EMOTION_BG: Record<EmotionType, string> = {
-  neutral: 'rgba(160,140,200,0.15)',
-  happy: 'rgba(249,213,110,0.15)',
-  angry: 'rgba(249,112,112,0.15)',
-  sad: 'rgba(122,176,232,0.15)',
-  relaxed: 'rgba(136,224,176,0.15)',
+  neutral: 'rgba(160,140,200,0.18)',
+  happy: 'rgba(249,213,110,0.18)',
+  angry: 'rgba(249,112,112,0.18)',
+  sad: 'rgba(122,176,232,0.18)',
+  relaxed: 'rgba(136,224,176,0.18)',
+};
+
+const EMOTION_ACCENT: Record<EmotionType, string> = {
+  neutral: 'rgba(180,150,220,0.5)',
+  happy: 'rgba(249,213,110,0.6)',
+  angry: 'rgba(249,112,112,0.6)',
+  sad: 'rgba(122,176,232,0.6)',
+  relaxed: 'rgba(136,224,176,0.6)',
 };
 
 function formatTime(ts: number): string {
@@ -32,12 +40,17 @@ function formatTime(ts: number): string {
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
-export function HistoryPanel() {
+type Props = {
+  /** 入力エリアの高さ（px）。履歴パネルの bottom をこの値に合わせる */
+  inputAreaHeight: number;
+};
+
+export function HistoryPanel({ inputAreaHeight }: Props) {
   const [isOpen, setIsOpen] = useAtom(historyPanelOpenAtom);
   const [history, setHistory] = useAtom(historyAtom);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 新エントリ追加時に末尾へスクロール
+  // 新エントリ追加 / pending 更新時に末尾へスクロール
   useEffect(() => {
     if (isOpen && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -50,21 +63,26 @@ export function HistoryPanel() {
     }
   };
 
+  // パネルの上端・下端をビューポートにクランプ
+  const panelTop = 0;
+  const panelBottom = inputAreaHeight; // 入力エリア分だけ底から空ける
+
   return (
     <>
-      {/* ── トグルタブ（常に表示） ── */}
+      {/* ── トグルタブ（常に表示、入力エリアの上端より上の中央） ── */}
       <button
         onClick={() => setIsOpen((v) => !v)}
         style={{
           position: 'fixed',
-          top: '50%',
+          // 入力エリアより上の空間の縦中央
+          top: `calc(50% - ${inputAreaHeight / 2}px)`,
           right: isOpen ? '320px' : '0px',
           transform: 'translateY(-50%)',
           zIndex: 50,
           backgroundColor: 'rgba(30,18,50,0.92)',
           border: '1px solid rgba(180,140,220,0.6)',
-          borderRight: isOpen ? '1px solid rgba(180,140,220,0.6)' : 'none',
-          borderRadius: isOpen ? '6px 0 0 6px' : '6px 0 0 6px',
+          borderRight: 'none',
+          borderRadius: '6px 0 0 6px',
           color: '#e8d9f5',
           padding: '12px 6px',
           cursor: 'pointer',
@@ -83,10 +101,10 @@ export function HistoryPanel() {
       <div
         style={{
           position: 'fixed',
-          top: 0,
+          top: panelTop,
           right: 0,
+          bottom: panelBottom,   // ← 入力エリアに被らない
           width: '320px',
-          height: '100dvh',
           zIndex: 40,
           display: 'flex',
           flexDirection: 'column',
@@ -137,36 +155,22 @@ export function HistoryPanel() {
                 key={entry.id}
                 style={{
                   padding: '10px 14px',
-                  borderBottom: '1px solid rgba(160,120,220,0.12)',
+                  borderBottom: '1px solid rgba(160,120,220,0.1)',
                 }}
               >
-                {/* タイムスタンプ + スピーカー + 感情 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>
-                  <span style={{ color: 'rgba(180,150,220,0.5)', fontSize: '11px' }}>
+                {/* タイムスタンプのみ */}
+                <div style={{ marginBottom: '5px' }}>
+                  <span style={{ color: 'rgba(180,150,220,0.45)', fontSize: '11px' }}>
                     {formatTime(entry.timestamp)}
-                  </span>
-                  <span style={{ color: '#c8a0ff', fontSize: '11px', fontWeight: 700 }}>
-                    {entry.speakerName}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '10px',
-                      padding: '1px 6px',
-                      borderRadius: '10px',
-                      backgroundColor: EMOTION_BG[entry.emotion],
-                      color: 'rgba(220,200,255,0.8)',
-                    }}
-                  >
-                    {EMOTION_EMOJI[entry.emotion]} {EMOTION_LABEL[entry.emotion]}
                   </span>
                 </div>
 
-                {/* ユーザー入力 */}
+                {/* ユーザー入力バブル */}
                 <div
                   style={{
                     backgroundColor: 'rgba(80,50,120,0.35)',
                     borderRadius: '4px 14px 14px 14px',
-                    padding: '7px 10px',
+                    padding: '6px 10px',
                     marginBottom: '6px',
                     color: '#e0d0ff',
                     fontSize: '13px',
@@ -174,28 +178,52 @@ export function HistoryPanel() {
                     wordBreak: 'break-all',
                   }}
                 >
-                  <span style={{ color: 'rgba(180,150,220,0.6)', fontSize: '10px', display: 'block', marginBottom: '2px' }}>
+                  {/* 吹き出しヘッダー: "あなた" */}
+                  <span style={{ color: 'rgba(180,150,220,0.55)', fontSize: '10px', display: 'block', marginBottom: '3px' }}>
                     あなた
                   </span>
                   {entry.userMessage}
                 </div>
 
-                {/* AI返答 */}
+                {/* AI返答バブル（pending中はローディング表示） */}
                 <div
                   style={{
-                    backgroundColor: EMOTION_BG[entry.emotion] ?? 'rgba(40,24,70,0.5)',
+                    backgroundColor: entry.pending ? 'rgba(40,24,70,0.4)' : (EMOTION_BG[entry.emotion] ?? 'rgba(40,24,70,0.5)'),
                     borderRadius: '14px 4px 14px 14px',
-                    padding: '7px 10px',
+                    padding: '6px 10px',
                     color: '#f0e8ff',
                     fontSize: '13px',
                     lineHeight: '1.55',
                     wordBreak: 'break-all',
+                    transition: 'background-color 0.3s',
                   }}
                 >
-                  <span style={{ color: 'rgba(220,190,255,0.6)', fontSize: '10px', display: 'block', marginBottom: '2px' }}>
-                    {entry.speakerName}
+                  {/* 吹き出しヘッダー: スピーカー名 + 感情 */}
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      marginBottom: '3px',
+                      color: entry.pending ? 'rgba(200,170,255,0.4)' : EMOTION_ACCENT[entry.emotion],
+                    }}
+                  >
+                    <span style={{ fontWeight: 700 }}>{entry.speakerName}</span>
+                    {!entry.pending && (
+                      <span>
+                        {EMOTION_EMOJI[entry.emotion]} {EMOTION_LABEL[entry.emotion]}
+                      </span>
+                    )}
                   </span>
-                  {entry.replyText}
+                  {entry.pending ? (
+                    <span style={{ color: 'rgba(200,170,255,0.4)', fontSize: '12px' }}>
+                      返答を生成中
+                      <span style={{ animation: 'blink 1s step-end infinite' }}>…</span>
+                    </span>
+                  ) : (
+                    entry.replyText
+                  )}
                 </div>
               </div>
             ))

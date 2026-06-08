@@ -26,8 +26,22 @@ export default function Home() {
   const [messageText, setMessageText] = useState('');
   const [currentEmotion, setCurrentEmotion] = useState<EmotionType>('neutral');
 
-  // textarea の高さ自動調整用
+  // 入力エリアの高さを計測して HistoryPanel に渡す
+  const inputAreaRef = useRef<HTMLDivElement>(null);
+  const [inputAreaHeight, setInputAreaHeight] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // ResizeObserver で入力エリア高さを追跡
+  useEffect(() => {
+    const el = inputAreaRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      setInputAreaHeight(el.offsetHeight);
+    });
+    ro.observe(el);
+    setInputAreaHeight(el.offsetHeight);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -38,7 +52,7 @@ export default function Home() {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // textarea の高さをコンテンツに合わせて自動調整
+  // textarea 高さ自動調整
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -50,10 +64,26 @@ export default function Home() {
     if (!selectedSpeaker || !userMessage.trim() || isProcessing) return;
 
     const sentMessage = userMessage.trim();
+    const entryId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
     setIsProcessing(true);
     setMessageText('');
     setCurrentEmotion('neutral');
     setUserMessage('');
+
+    // ── 「あなた」側を pending 状態で即座に履歴に追加 ──
+    setHistory((prev) => [
+      ...prev,
+      {
+        id: entryId,
+        timestamp: Date.now(),
+        userMessage: sentMessage,
+        speakerName: selectedSpeaker.name,
+        emotion: 'neutral',
+        replyText: '',
+        pending: true,
+      },
+    ]);
 
     let fullReply = '';
     let finalEmotion: EmotionType = 'neutral';
@@ -67,6 +97,8 @@ export default function Home() {
 
       if (!groqChatResponse.ok) {
         console.error('Groq API error:', groqChatResponse.status, await groqChatResponse.text());
+        // エラー時は pending エントリを削除
+        setHistory((prev) => prev.filter((e) => e.id !== entryId));
         return;
       }
 
@@ -84,25 +116,20 @@ export default function Home() {
         },
       );
 
-      // 会話履歴に追記
-      setHistory((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          timestamp: Date.now(),
-          userMessage: sentMessage,
-          speakerName: selectedSpeaker.name,
-          emotion: finalEmotion,
-          replyText: fullReply,
-        },
-      ]);
+      // ── pending エントリを完成した内容で更新 ──
+      setHistory((prev) =>
+        prev.map((e) =>
+          e.id === entryId
+            ? { ...e, emotion: finalEmotion, replyText: fullReply, pending: false }
+            : e,
+        ),
+      );
     } finally {
       setIsProcessing(false);
     }
   }, [selectedSpeaker, userMessage, isProcessing, viewer, setHistory]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Shift+Enter で改行、Enter のみで送信
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       onSendClick();
@@ -116,15 +143,26 @@ export default function Home() {
   return (
     <div className="font-M_PLUS_2">
       <VrmViewer />
-      <HistoryPanel />
+
+      {/* 入力エリア高さを渡して履歴パネルが被らないようにする */}
+      <HistoryPanel inputAreaHeight={inputAreaHeight} />
 
       {/* メッセージウィンドウ */}
-      <div style={messageWindowWrapStyle}>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: inputAreaHeight + 12,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'min(680px, 92vw)',
+          zIndex: 30,
+        }}
+      >
         <MessageWindow text={messageText} emotion={currentEmotion} isProcessing={isProcessing} />
       </div>
 
       {/* 入力エリア */}
-      <div style={inputAreaOuterStyle}>
+      <div ref={inputAreaRef} style={inputAreaOuterStyle}>
         <div style={inputAreaInnerStyle}>
 
           {/* 上段: VRM選択 + スピーカー選択 */}
@@ -171,24 +209,12 @@ export default function Home() {
   );
 }
 
-// ────────────────────────────────────────────────
-// スタイル定義
-// ────────────────────────────────────────────────
-
-const messageWindowWrapStyle: React.CSSProperties = {
-  position: 'absolute',
-  bottom: '160px',
-  left: '50%',
-  transform: 'translateX(-50%)',
-  width: 'min(680px, 92vw)',
-  zIndex: 30,
-};
-
 const inputAreaOuterStyle: React.CSSProperties = {
-  position: 'absolute',
+  position: 'fixed',
   bottom: 0,
+  left: 0,
+  right: 0,
   zIndex: 20,
-  width: '100vw',
   backgroundColor: 'rgb(251,226,202)',
   color: '#000000',
 };

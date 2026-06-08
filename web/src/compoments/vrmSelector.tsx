@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useAtom } from 'jotai';
 import { vrmListAtom, selectedVrmAtom, VrmEntry } from '../lib/vrmAtom';
 
@@ -9,12 +9,13 @@ type Props = {
 export function VrmSelector({ onVrmChange }: Props) {
   const [vrmList, setVrmList] = useAtom(vrmListAtom);
   const [selectedVrm, setSelectedVrm] = useAtom(selectedVrmAtom);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const dropZoneRef = useRef<HTMLDivElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
 
   const loadCustomVrm = (file: File) => {
-    if (!file.name.endsWith('.vrm')) return;
-    // 同名ファイルが既に追加済みなら上書き（objectURLは更新）
+    if (!file.name.toLowerCase().endsWith('.vrm')) return;
     const blob = new Blob([file], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const label = file.name.replace(/\.vrm$/i, '');
@@ -26,11 +27,16 @@ export function VrmSelector({ onVrmChange }: Props) {
     });
     setSelectedVrm(entry);
     onVrmChange(url);
+    setModalOpen(false);
+    // プルダウンをリセット（__add__ が選択されたままにならないよう）
+    if (selectRef.current) selectRef.current.value = url;
   };
 
   const onSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (e.target.value === '__add__') {
-      fileInputRef.current?.click();
+      setModalOpen(true);
+      // select の値を元に戻す
+      e.target.value = selectedVrm.url;
       return;
     }
     const entry = vrmList.find((v) => v.url === e.target.value);
@@ -42,67 +48,32 @@ export function VrmSelector({ onVrmChange }: Props) {
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) loadCustomVrm(file);
-    // 同じファイルを再選択できるようにリセット
     e.target.value = '';
   };
 
-  const onDragOver = (e: React.DragEvent) => {
+  const onModalDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (dropZoneRef.current) dropZoneRef.current.style.borderColor = 'rgba(200,160,255,0.9)';
+    setIsDragOver(true);
   };
-
-  const onDragLeave = () => {
-    if (dropZoneRef.current) dropZoneRef.current.style.borderColor = 'rgba(180,140,220,0.4)';
-  };
-
-  const onDrop = (e: React.DragEvent) => {
+  const onModalDragLeave = () => setIsDragOver(false);
+  const onModalDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    onDragLeave();
+    setIsDragOver(false);
     const file = e.dataTransfer.files[0];
     if (file) loadCustomVrm(file);
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-      {/* VRMプルダウン */}
-      <select style={selectStyle} value={selectedVrm.url} onChange={onSelectChange}>
+    <>
+      {/* VRM プルダウン */}
+      <select ref={selectRef} style={selectStyle} value={selectedVrm.url} onChange={onSelectChange}>
         {vrmList.map((v: VrmEntry) => (
           <option key={v.url} value={v.url}>
             {v.isCustom ? `📎 ${v.label}` : `🧊 ${v.label}`}
           </option>
         ))}
-        {/* ファイル追加アクション */}
         <option value="__add__">＋ VRMファイルを追加...</option>
       </select>
-
-      {/* ドラッグ&ドロップゾーン */}
-      <div
-        ref={dropZoneRef}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        onClick={() => fileInputRef.current?.click()}
-        style={{
-          padding: '4px 10px',
-          border: '1px dashed rgba(180,140,220,0.4)',
-          borderRadius: '6px',
-          color: 'rgba(200,170,240,0.6)',
-          fontSize: '11px',
-          cursor: 'pointer',
-          transition: 'border-color 0.2s, color 0.2s',
-          whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLDivElement).style.color = 'rgba(220,190,255,0.9)';
-          (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(200,160,255,0.7)';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLDivElement).style.color = 'rgba(200,170,240,0.6)';
-          (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(180,140,220,0.4)';
-        }}
-      >
-        📂 VRMをドロップ
-      </div>
 
       <input
         ref={fileInputRef}
@@ -111,7 +82,104 @@ export function VrmSelector({ onVrmChange }: Props) {
         style={{ display: 'none' }}
         onChange={onFileChange}
       />
-    </div>
+
+      {/* ── VRM追加モーダル ── */}
+      {modalOpen && (
+        <div
+          onClick={() => setModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 'min(420px, 90vw)',
+              backgroundColor: 'rgba(18,10,40,0.97)',
+              border: '1px solid rgba(160,120,220,0.55)',
+              borderRadius: '12px',
+              boxShadow: '0 8px 40px rgba(80,40,160,0.45)',
+              padding: '28px 24px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+            }}
+          >
+            {/* モーダルヘッダー */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#c8b8e8', fontWeight: 700, fontSize: '15px', letterSpacing: '0.05em' }}>
+                🧊 VRMファイルを追加
+              </span>
+              <button
+                onClick={() => setModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(200,170,255,0.5)',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                  padding: '0 2px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* ドラッグ&ドロップゾーン */}
+            <div
+              onDragOver={onModalDragOver}
+              onDragLeave={onModalDragLeave}
+              onDrop={onModalDrop}
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                border: `2px dashed ${isDragOver ? 'rgba(200,160,255,0.9)' : 'rgba(160,120,220,0.45)'}`,
+                borderRadius: '10px',
+                padding: '40px 20px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                backgroundColor: isDragOver ? 'rgba(120,80,200,0.15)' : 'rgba(40,24,70,0.3)',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <div style={{ fontSize: '36px', marginBottom: '12px' }}>📂</div>
+              <div style={{ color: isDragOver ? '#e0c8ff' : '#b8a0d8', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>
+                VRMファイルをドロップ
+              </div>
+              <div style={{ color: 'rgba(180,150,220,0.5)', fontSize: '12px' }}>
+                またはクリックしてファイルを選択
+              </div>
+              <div style={{ color: 'rgba(160,130,200,0.4)', fontSize: '11px', marginTop: '8px' }}>
+                対応形式: .vrm
+              </div>
+            </div>
+
+            {/* キャンセルボタン */}
+            <button
+              onClick={() => setModalOpen(false)}
+              style={{
+                padding: '9px',
+                backgroundColor: 'rgba(60,40,90,0.5)',
+                border: '1px solid rgba(160,120,220,0.3)',
+                borderRadius: '7px',
+                color: 'rgba(200,170,240,0.7)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

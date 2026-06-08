@@ -9,6 +9,8 @@ export type HistoryEntry = {
   speakerName: string;
   emotion: EmotionType;
   replyText: string;
+  /** true の間はAI返答が未完了（あなた側だけ先行表示） */
+  pending?: boolean;
 };
 
 const historyStorage = createJSONStorage<HistoryEntry[]>(() => {
