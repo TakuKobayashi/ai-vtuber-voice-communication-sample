@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { vrmListAtom, selectedVrmAtom, VrmEntry } from '../lib/vrmAtom';
+import { vrmListAtom, selectedVrmAtom, VrmEntry, loadDefaultVrmList } from '../lib/vrmAtom';
 
 type Props = {
   onVrmChange: (url: string) => void;
@@ -9,6 +9,18 @@ type Props = {
 export function VrmSelector({ onVrmChange }: Props) {
   const [vrmList, setVrmList] = useAtom(vrmListAtom);
   const [selectedVrm, setSelectedVrm] = useAtom(selectedVrmAtom);
+
+  // assets-manifest.json からデフォルトVRM一覧を初期化
+  useEffect(() => {
+    if (vrmList.length > 0) return;
+    loadDefaultVrmList().then((defaults) => {
+      setVrmList(defaults);
+      if (!selectedVrm && defaults.length > 0) {
+        setSelectedVrm(defaults[0]);
+        onVrmChange(defaults[0].url);
+      }
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [modalOpen, setModalOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

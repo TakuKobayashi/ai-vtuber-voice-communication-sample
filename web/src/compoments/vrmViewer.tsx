@@ -9,7 +9,7 @@ export function VrmViewer() {
     (canvas: HTMLCanvasElement) => {
       if (canvas) {
         viewer.setup(canvas);
-        viewer.loadVrm(buildUrl('/Zundamon_VRM_10.vrm'));
+        viewer.loadVrm(buildUrl('/vrm/Zundamon_VRM_10.vrm'));
       }
     },
     [viewer],

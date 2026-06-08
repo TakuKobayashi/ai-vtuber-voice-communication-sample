@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "generate-manifest": "tsx scripts/generate-assets-manifest.ts",
+    "predev": "pnpm run generate-manifest",
     "dev": "next dev",
+    "prebuild": "pnpm run generate-manifest",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -29,6 +32,7 @@
     "eslint": "^10.4.1",
     "eslint-config-next": "16.2.6",
     "prettier": "^3.8.3",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
 }

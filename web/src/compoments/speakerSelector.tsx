@@ -18,27 +18,27 @@ const EMOTION_LABEL: Record<EmotionType, string> = {
 };
 
 const EMOTION_COLOR: Record<EmotionType, string> = {
-  neutral: 'rgba(160,140,200,0.25)',
-  happy: 'rgba(249,213,110,0.25)',
-  angry: 'rgba(249,112,112,0.25)',
-  sad: 'rgba(122,176,232,0.25)',
-  relaxed: 'rgba(136,224,176,0.25)',
+  neutral: 'rgba(140,110,200,0.18)',
+  happy: 'rgba(200,150,20,0.15)',
+  angry: 'rgba(200,50,60,0.15)',
+  sad: 'rgba(40,120,220,0.15)',
+  relaxed: 'rgba(20,160,100,0.15)',
 };
 
 const EMOTION_BORDER: Record<EmotionType, string> = {
-  neutral: 'rgba(160,140,200,0.6)',
-  happy: 'rgba(249,213,110,0.7)',
-  angry: 'rgba(249,112,112,0.7)',
-  sad: 'rgba(122,176,232,0.7)',
-  relaxed: 'rgba(136,224,176,0.7)',
+  neutral: 'rgba(100,70,170,0.5)',
+  happy: 'rgba(160,110,0,0.5)',
+  angry: 'rgba(160,30,40,0.5)',
+  sad: 'rgba(20,90,180,0.5)',
+  relaxed: 'rgba(10,120,70,0.5)',
 };
 
 const EMOTION_TEXT: Record<EmotionType, string> = {
-  neutral: '#c8b8e8',
-  happy: '#f9d56e',
-  angry: '#f97070',
-  sad: '#7ab0e8',
-  relaxed: '#88e0b0',
+  neutral: '#5a3d8a',
+  happy: '#8a6200',
+  angry: '#a01820',
+  sad: '#1a4e8a',
+  relaxed: '#1a6e4a',
 };
 
 export function SpeakerSelector({ currentEmotion, isProcessing }: Props) {
