@@ -1,7 +1,7 @@
 import { EmotionType } from './vrmViewer/model';
 import { Viewer } from './vrmViewer/viewer';
+import { Speaker, resolveStyleId } from '../lib/speakersAtom';
 
-// VoiceVox は server 側の /api/voicevox/* プロキシ経由で呼ぶ
 const voiceVoxApiBase = '/api/voicevox';
 
 // ----------------------------------------------------------------
@@ -14,7 +14,7 @@ export async function loadSpeackers(): Promise<any[]> {
 }
 
 // ----------------------------------------------------------------
-// 単一テキストをしゃべらせる（内部ユーティリティ）
+// 音声合成（内部ユーティリティ）
 // ----------------------------------------------------------------
 
 async function synthesizeAudio(speackerId: number, text: string): Promise<ArrayBuffer> {
@@ -35,26 +35,7 @@ async function synthesizeAudio(speackerId: number, text: string): Promise<ArrayB
 }
 
 // ----------------------------------------------------------------
-// 単一テキストをしゃべらせる（公開API・後方互換）
-// ----------------------------------------------------------------
-
-export async function speakCharacter(
-  speackerId: number,
-  speakText: string,
-  viewer: Viewer,
-  expression: EmotionType = 'neutral',
-): Promise<void> {
-  const buffer = await synthesizeAudio(speackerId, speakText);
-  return viewer.model?.speak(buffer, expression);
-}
-
-// ----------------------------------------------------------------
 // SSE ストリームパーサー
-//
-// サーバーが送出するイベント:
-//   {"type":"emotion","value":"happy"}
-//   {"type":"delta","value":"テキスト断片"}
-//   [DONE]
 // ----------------------------------------------------------------
 
 export type GroqStreamEvent =
@@ -96,9 +77,10 @@ async function* readGroqStream(response: Response): AsyncGenerator<GroqStreamEve
   }
 }
 
-/**
- * 句読点・改行でセンテンスの区切りを検出する分割器
- */
+// ----------------------------------------------------------------
+// センテンス分割器
+// ----------------------------------------------------------------
+
 class SentenceBuffer {
   private buf = '';
   private static readonly DELIMITERS = /[。．！？!?\n]/;
@@ -129,17 +111,15 @@ class SentenceBuffer {
   }
 }
 
-/**
- * Groq SSE ストリームを受け取り、センテンス単位で並列合成→順次再生する。
- *
- * @param speackerId      VoiceVox の話者 ID
- * @param groqResponse    /api/groq/chat の Response (SSE)
- * @param viewer          Viewer インスタンス
- * @param onEmotion       感情が確定したときに呼ばれるコールバック
- * @param onDelta         テキスト断片が届くたびに呼ばれるコールバック（メッセージウィンドウ表示用）
- */
+// ----------------------------------------------------------------
+// メイン: Groq SSE ストリームを受け取り順次再生
+//
+// speaker を受け取り、感情が確定した時点で resolveStyleId() で
+// 対応するスタイル ID を自動決定する。
+// ----------------------------------------------------------------
+
 export async function speakCharacterStream(
-  speackerId: number,
+  speaker: Speaker,
   groqResponse: Response,
   viewer: Viewer,
   onEmotion?: (emotion: EmotionType) => void,
@@ -150,8 +130,10 @@ export async function speakCharacterStream(
   let currentEmotion: EmotionType = 'neutral';
 
   const enqueueSynthesis = (sentence: string) => {
+    // 感情に対応したスタイル ID をその時点で解決してキューに積む
+    const styleId = resolveStyleId(speaker, currentEmotion);
     synthesisQueue.push({
-      promise: synthesizeAudio(speackerId, sentence),
+      promise: synthesizeAudio(styleId, sentence),
       expression: currentEmotion,
     });
   };

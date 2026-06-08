@@ -8,44 +8,35 @@ import { IconButton } from '../compoments/iconButton';
 import { SpeakerSelector } from '../compoments/speakerSelector';
 import { MessageWindow } from '../compoments/messageWindow';
 import { loadSpeackers, speakCharacterStream } from '../features/speak-character';
-import { speakersAtom, selectedSpeakerAtom, selectedSpeakerStyleAtom } from '../lib/speakersAtom';
+import { speakersAtom, selectedSpeakerAtom } from '../lib/speakersAtom';
 import { EmotionType } from '../features/vrmViewer/model';
 
 export default function Home() {
   const { viewer } = useContext(ViewerContext);
 
-  // ── スピーカー関連 ──
   const [speakers, setSpeakers] = useAtom(speakersAtom);
-  const [, setSelectedSpeaker] = useAtom(selectedSpeakerAtom);
-  const [selectedStyle, setSelectedStyle] = useAtom(selectedSpeakerStyleAtom);
+  const [selectedSpeaker, setSelectedSpeaker] = useAtom(selectedSpeakerAtom);
 
-  // ── UI 状態 ──
   const [userMessage, setUserMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // ── メッセージウィンドウ ──
   const [messageText, setMessageText] = useState('');
   const [currentEmotion, setCurrentEmotion] = useState<EmotionType>('neutral');
 
-  // ── 初期化: スピーカー一覧を取得してデフォルト選択 ──
+  // ── 初期化: スピーカー一覧を取得（localStorageキャッシュ優先） ──
   useEffect(() => {
     (async () => {
+      // speakersAtom が null（未取得 or 期限切れ）のときだけ API を叩く
       const speakerList = speakers ?? (await loadSpeackers());
       if (!speakers) setSpeakers(speakerList);
 
-      // デフォルト: ずんだもん あまあま
-      const defaultSpeaker = speakerList.find((s: any) => s.name === 'ずんだもん') ?? speakerList[0];
-      const defaultStyle =
-        defaultSpeaker?.styles.find((s: any) => s.name === 'あまあま') ?? defaultSpeaker?.styles[0] ?? null;
-
-      setSelectedSpeaker(defaultSpeaker ?? null);
-      setSelectedStyle(defaultStyle);
+      // デフォルト: ずんだもん（いなければ先頭）
+      const defaultSpeaker = speakerList.find((s: any) => s.name === 'ずんだもん') ?? speakerList[0] ?? null;
+      setSelectedSpeaker(defaultSpeaker);
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 送信処理 ──
   const onSendClick = useCallback(async () => {
-    if (!selectedStyle?.id || !userMessage || isProcessing) return;
+    if (!selectedSpeaker || !userMessage || isProcessing) return;
 
     setIsProcessing(true);
     setMessageText('');
@@ -63,19 +54,18 @@ export default function Home() {
         return;
       }
 
+      // Speaker を渡す → 感情に応じたスタイルIDは speakCharacterStream 内で自動解決
       await speakCharacterStream(
-        selectedStyle.id,
+        selectedSpeaker,
         groqChatResponse,
         viewer,
-        // onEmotion: 感情確定時
         (emotion) => setCurrentEmotion(emotion),
-        // onDelta: テキスト断片をメッセージウィンドウに随時追記
         (delta) => setMessageText((prev) => prev + delta),
       );
     } finally {
       setIsProcessing(false);
     }
-  }, [selectedStyle, userMessage, isProcessing, viewer]);
+  }, [selectedSpeaker, userMessage, isProcessing, viewer]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.nativeEvent.isComposing) onSendClick();
@@ -85,20 +75,16 @@ export default function Home() {
     <div className="font-M_PLUS_2">
       <VrmViewer />
 
-      {/* ── メッセージウィンドウ（VRMの前面・入力欄の上） ── */}
       <div style={messageWindowWrapStyle}>
         <MessageWindow text={messageText} emotion={currentEmotion} isProcessing={isProcessing} />
       </div>
 
-      {/* ── 入力エリア ── */}
       <div style={inputAreaOuterStyle}>
         <div style={inputAreaInnerStyle}>
-          {/* スピーカー選択 */}
           <div style={{ marginBottom: '8px' }}>
-            <SpeakerSelector />
+            <SpeakerSelector currentEmotion={currentEmotion} isProcessing={isProcessing} />
           </div>
 
-          {/* テキスト入力行 */}
           <div style={{ display: 'grid', gridAutoFlow: 'column', gap: '8px', gridTemplateColumns: 'min-content 1fr min-content' }}>
             <IconButton
               iconName="24/Microphone"
@@ -134,13 +120,9 @@ export default function Home() {
   );
 }
 
-// ────────────────────────────────────────────────
-// スタイル定義
-// ────────────────────────────────────────────────
-
 const messageWindowWrapStyle: React.CSSProperties = {
   position: 'absolute',
-  bottom: '120px', // 入力欄の高さ分上にずらす
+  bottom: '120px',
   left: '50%',
   transform: 'translateX(-50%)',
   width: 'min(680px, 92vw)',
