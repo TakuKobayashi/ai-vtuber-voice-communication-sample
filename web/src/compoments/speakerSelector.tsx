@@ -1,5 +1,5 @@
 import { useAtom } from 'jotai';
-import { speakersAtom, selectedSpeakerAtom, resolveStyleName, Speaker } from '../lib/speakersAtom';
+import { speakersAtom, selectedSpeakerAtom, selectedSpeakerNameAtom, resolveStyleName, Speaker } from '../lib/speakersAtom';
 import { EmotionType } from '../features/vrmViewer/model';
 
 type Props = {
@@ -44,12 +44,14 @@ const EMOTION_TEXT: Record<EmotionType, string> = {
 export function SpeakerSelector({ currentEmotion, isProcessing }: Props) {
   const [speakers] = useAtom(speakersAtom);
   const [selectedSpeaker, setSelectedSpeaker] = useAtom(selectedSpeakerAtom);
+  const [, setSelectedSpeakerName] = useAtom(selectedSpeakerNameAtom);
 
   if (!speakers || speakers.length === 0) return null;
 
   const onSpeakerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const speaker = speakers.find((s: Speaker) => s.name === e.target.value) ?? null;
     setSelectedSpeaker(speaker);
+    if (speaker) setSelectedSpeakerName(speaker.name);
   };
 
   // 現在の感情で実際に使われるスタイル名を表示用に解決

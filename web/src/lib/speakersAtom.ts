@@ -112,3 +112,28 @@ export function resolveStyleName(speaker: Speaker, emotion: string): string {
   }
   return speaker.styles[0]?.name ?? 'ノーマル';
 }
+
+// ----------------------------------------------------------------
+// 選択中スピーカー名を localStorage に永続化する atom
+// ----------------------------------------------------------------
+
+const _noopStorage = {
+  length: 0,
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+  clear: () => {},
+  key: () => null,
+} as unknown as Storage;
+
+const _speakerPersistStorage = createJSONStorage<string | null>(() =>
+  typeof window === 'undefined' ? _noopStorage : localStorage,
+);
+
+/** 選択中スピーカーの name を永続化する atom */
+export const selectedSpeakerNameAtom = atomWithStorage<string | null>(
+  'selected_speaker_name',
+  null,
+  _speakerPersistStorage,
+  { getOnInit: true },
+);

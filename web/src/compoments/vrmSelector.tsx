@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { vrmListAtom, selectedVrmAtom, VrmEntry, loadDefaultVrmList } from '../lib/vrmAtom';
+import { vrmListAtom, selectedVrmAtom, VrmEntry, loadDefaultVrmList, selectedVrmPathAtom } from '../lib/vrmAtom';
 
 type Props = {
   onVrmChange: (url: string) => void;
@@ -9,15 +9,20 @@ type Props = {
 export function VrmSelector({ onVrmChange }: Props) {
   const [vrmList, setVrmList] = useAtom(vrmListAtom);
   const [selectedVrm, setSelectedVrm] = useAtom(selectedVrmAtom);
+  const [selectedVrmPath, setSelectedVrmPath] = useAtom(selectedVrmPathAtom);
 
   // assets-manifest.json からデフォルトVRM一覧を初期化
+  // localStorage に保存済みのパスがあればそれを復元、なければ先頭を選択
   useEffect(() => {
     if (vrmList.length > 0) return;
     loadDefaultVrmList().then((defaults) => {
       setVrmList(defaults);
-      if (!selectedVrm && defaults.length > 0) {
-        setSelectedVrm(defaults[0]);
-        onVrmChange(defaults[0].url);
+      const restored = selectedVrmPath
+        ? (defaults.find((v) => v.url === selectedVrmPath) ?? defaults[0])
+        : defaults[0];
+      if (restored) {
+        setSelectedVrm(restored);
+        onVrmChange(restored.url);
       }
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -55,6 +60,8 @@ export function VrmSelector({ onVrmChange }: Props) {
     if (!entry) return;
     setSelectedVrm(entry);
     onVrmChange(entry.url);
+    // isCustom:false のときだけ localStorage に保存
+    if (!entry.isCustom) setSelectedVrmPath(entry.url);
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

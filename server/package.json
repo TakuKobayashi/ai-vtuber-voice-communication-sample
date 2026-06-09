@@ -11,6 +11,7 @@
     "format": "prettier --config .prettierrc --write \"src/**/*.{ts,js}\""
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
     "groq-sdk": "^1.2.1",
     "hono": "^4.12.23"
   },

@@ -10,9 +10,11 @@ import { MessageWindow } from '../compoments/messageWindow';
 import { HistoryPanel } from '../compoments/historyPanel';
 import { VrmSelector } from '../compoments/vrmSelector';
 import { BackgroundSelector } from '../compoments/backgroundSelector';
+import { AiProviderSelector } from '../compoments/aiProviderSelector';
 import { loadSpeackers, speakCharacterStream } from '../features/speak-character';
-import { speakersAtom, selectedSpeakerAtom } from '../lib/speakersAtom';
+import { speakersAtom, selectedSpeakerAtom, selectedSpeakerNameAtom } from '../lib/speakersAtom';
 import { historyAtom } from '../lib/historyAtom';
+import { aiProviderAtom, getApiPath } from '../lib/aiProviderAtom';
 import { EmotionType } from '../features/vrmViewer/model';
 
 export default function Home() {
@@ -20,7 +22,9 @@ export default function Home() {
 
   const [speakers, setSpeakers] = useAtom(speakersAtom);
   const [selectedSpeaker, setSelectedSpeaker] = useAtom(selectedSpeakerAtom);
+  const [selectedSpeakerName] = useAtom(selectedSpeakerNameAtom);
   const [, setHistory] = useAtom(historyAtom);
+  const [aiProvider] = useAtom(aiProviderAtom);
 
   const [userMessage, setUserMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,7 +53,12 @@ export default function Home() {
     (async () => {
       const speakerList = speakers ?? (await loadSpeackers());
       if (!speakers) setSpeakers(speakerList);
-      const defaultSpeaker = speakerList.find((s: any) => s.name === 'ずんだもん') ?? speakerList[0] ?? null;
+      // localStorage に保存済みの名前があれば復元、なければ「ずんだもん」→先頭
+      const defaultSpeaker =
+        (selectedSpeakerName ? speakerList.find((s: any) => s.name === selectedSpeakerName) : null)
+        ?? speakerList.find((s: any) => s.name === 'ずんだもん')
+        ?? speakerList[0]
+        ?? null;
       setSelectedSpeaker(defaultSpeaker);
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -91,14 +100,14 @@ export default function Home() {
     let finalEmotion: EmotionType = 'neutral';
 
     try {
-      const groqChatResponse = await fetch('/api/groq/chat', {
+      const groqChatResponse = await fetch(getApiPath(aiProvider), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: sentMessage }),
       });
 
       if (!groqChatResponse.ok) {
-        console.error('Groq API error:', groqChatResponse.status, await groqChatResponse.text());
+        console.error(`${aiProvider} API error:`, groqChatResponse.status, await groqChatResponse.text());
         // エラー時は pending エントリを削除
         setHistory((prev) => prev.filter((e) => e.id !== entryId));
         return;
@@ -181,7 +190,7 @@ export default function Home() {
       <div ref={inputAreaRef} style={inputAreaOuterStyle}>
         <div style={inputAreaInnerStyle}>
 
-          {/* 上段: ラベル付きプルダウン（背景 → VRM → ボイス）*/}
+          {/* 上段: ラベル付きプルダウン（背景 → VRM → AI → ボイス）*/}
           <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '8px' }}>
             <div style={selectorGroupStyle}>
               <span style={selectorLabelStyle}>背景</span>
@@ -190,6 +199,10 @@ export default function Home() {
             <div style={selectorGroupStyle}>
               <span style={selectorLabelStyle}>VRM</span>
               <VrmSelector onVrmChange={onVrmChange} />
+            </div>
+            <div style={selectorGroupStyle}>
+              <span style={selectorLabelStyle}>AI</span>
+              <AiProviderSelector />
             </div>
             <div style={selectorGroupStyle}>
               <span style={selectorLabelStyle}>ボイス</span>

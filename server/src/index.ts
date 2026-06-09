@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Bindings } from './bindings';
 import { groqRouter } from './routes/groq';
+import { geminiRouter } from './routes/gemini';
 import { voicevoxRouter } from './routes/voicevox';
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -20,6 +21,7 @@ api.get('/', (c) => {
 });
 
 api.route('/groq', groqRouter);
+api.route('/gemini', geminiRouter);
 api.route('/voicevox', voicevoxRouter);
 
 export default app;

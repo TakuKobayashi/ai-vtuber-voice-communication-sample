@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { backgroundListAtom, selectedBackgroundAtom, BackgroundEntry, loadDefaultBackgroundList } from '../lib/backgroundAtom';
+import {
+  backgroundListAtom,
+  selectedBackgroundAtom,
+  selectedBackgroundPathAtom,
+  BackgroundEntry,
+  loadDefaultBackgroundList,
+} from '../lib/backgroundAtom';
 
 type Props = {
   onBackgroundChange: (url: string) => void;
@@ -9,15 +15,19 @@ type Props = {
 export function BackgroundSelector({ onBackgroundChange }: Props) {
   const [backgroundList, setBackgroundList] = useAtom(backgroundListAtom);
   const [selectedBackground, setSelectedBackground] = useAtom(selectedBackgroundAtom);
+  const [selectedBgPath, setSelectedBgPath] = useAtom(selectedBackgroundPathAtom);
 
   useEffect(() => {
     if (backgroundList.length > 0) return;
     loadDefaultBackgroundList().then((defaults) => {
       setBackgroundList(defaults);
-      // 先頭画像をデフォルト選択
-      if (defaults.length > 0) {
-        setSelectedBackground(defaults[0]);
-        onBackgroundChange(defaults[0].url);
+      // localStorage に保存済みのパスがあれば復元、なければ先頭
+      const restored = selectedBgPath
+        ? (defaults.find((b) => b.url === selectedBgPath) ?? defaults[0])
+        : defaults[0];
+      if (restored) {
+        setSelectedBackground(restored);
+        onBackgroundChange(restored.url);
       }
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -25,7 +35,10 @@ export function BackgroundSelector({ onBackgroundChange }: Props) {
   const onSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const entry = backgroundList.find((b) => b.url === e.target.value) ?? null;
     setSelectedBackground(entry);
-    if (entry) onBackgroundChange(entry.url);
+    if (entry) {
+      onBackgroundChange(entry.url);
+      setSelectedBgPath(entry.url);
+    }
   };
 
   if (backgroundList.length === 0) return null;
