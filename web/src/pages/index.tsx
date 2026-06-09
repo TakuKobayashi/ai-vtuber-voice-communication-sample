@@ -9,6 +9,7 @@ import { SpeakerSelector } from '../compoments/speakerSelector';
 import { MessageWindow } from '../compoments/messageWindow';
 import { HistoryPanel } from '../compoments/historyPanel';
 import { VrmSelector } from '../compoments/vrmSelector';
+import { BackgroundSelector } from '../compoments/backgroundSelector';
 import { loadSpeackers, speakCharacterStream } from '../features/speak-character';
 import { speakersAtom, selectedSpeakerAtom } from '../lib/speakersAtom';
 import { historyAtom } from '../lib/historyAtom';
@@ -25,6 +26,7 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [currentEmotion, setCurrentEmotion] = useState<EmotionType>('neutral');
+  const [backgroundUrl, setBackgroundUrl] = useState<string>('');
 
   // 入力エリアの高さを計測して HistoryPanel に渡す
   const inputAreaRef = useRef<HTMLDivElement>(null);
@@ -142,6 +144,20 @@ export default function Home() {
 
   return (
     <div className="font-M_PLUS_2">
+      {/* 背景画像（常に表示、backgroundUrl が空文字でなければ） */}
+      {backgroundUrl && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: -20,
+            backgroundImage: `url(${backgroundUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+      )}
+
       <VrmViewer />
 
       {/* 入力エリア高さを渡して履歴パネルが被らないようにする */}
@@ -165,11 +181,20 @@ export default function Home() {
       <div ref={inputAreaRef} style={inputAreaOuterStyle}>
         <div style={inputAreaInnerStyle}>
 
-          {/* 上段: VRM選択 + スピーカー選択 */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
-            <VrmSelector onVrmChange={onVrmChange} />
-            <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(180,140,220,0.3)' }} />
-            <SpeakerSelector currentEmotion={currentEmotion} isProcessing={isProcessing} />
+          {/* 上段: ラベル付きプルダウン（背景 → VRM → ボイス）*/}
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '8px' }}>
+            <div style={selectorGroupStyle}>
+              <span style={selectorLabelStyle}>背景</span>
+              <BackgroundSelector onBackgroundChange={setBackgroundUrl} />
+            </div>
+            <div style={selectorGroupStyle}>
+              <span style={selectorLabelStyle}>VRM</span>
+              <VrmSelector onVrmChange={onVrmChange} />
+            </div>
+            <div style={selectorGroupStyle}>
+              <span style={selectorLabelStyle}>ボイス</span>
+              <SpeakerSelector currentEmotion={currentEmotion} isProcessing={isProcessing} />
+            </div>
           </div>
 
           {/* 下段: テキスト入力 */}
@@ -245,4 +270,18 @@ const textareaStyle: React.CSSProperties = {
   maxHeight: '120px',
   overflowY: 'auto',
   fontFamily: 'inherit',
+};
+
+const selectorGroupStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '3px',
+};
+
+const selectorLabelStyle: React.CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 700,
+  color: 'rgb(120, 90, 60)',
+  letterSpacing: '0.08em',
+  paddingLeft: '2px',
 };

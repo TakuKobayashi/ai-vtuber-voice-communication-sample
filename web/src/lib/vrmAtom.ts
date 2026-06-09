@@ -15,7 +15,7 @@ export type VrmEntry = {
 // SSG build 時は実行されず、ブラウザ側で初回マウント時に呼ばれる。
 // ----------------------------------------------------------------
 
-type VrmManifestEntry = { label: string; path: string };
+type VrmManifestEntry = { name: string; path: string };
 type AssetsManifest = { vrm: VrmManifestEntry[]; backgrounds: never[] };
 
 let _defaultVrmList: VrmEntry[] = [];
@@ -26,7 +26,7 @@ export async function loadDefaultVrmList(): Promise<VrmEntry[]> {
     const res = await fetch(buildUrl('/assets-manifest.json'));
     const manifest: AssetsManifest = await res.json();
     _defaultVrmList = manifest.vrm.map((v) => ({
-      label: v.label,
+      label: v.name,   // VRMメタから取得した name を表示名として使う
       url: buildUrl(v.path),
       isCustom: false,
     }));
