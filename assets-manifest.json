@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-06-09T02:18:43.878Z",
+  "vrm": [
+    {
+      "name": "AvatarSample_B",
+      "path": "/vrm/AvatarSample_B.vrm"
+    },
+    {
+      "name": "ずんだもん（人型）",
+      "path": "/vrm/Zundamon_VRM_10.vrm"
+    }
+  ],
+  "backgrounds": [
+    {
+      "label": "ground bg",
+      "path": "/backgrounds/ground_bg.jpg"
+    },
+    {
+      "label": "japanstyle home bg",
+      "path": "/backgrounds/japanstyle_home_bg.jpg"
+    },
+    {
+      "label": "store bg",
+      "path": "/backgrounds/store_bg.jpg"
+    }
+  ]
+}
