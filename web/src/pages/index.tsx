@@ -55,10 +55,10 @@ export default function Home() {
       if (!speakers) setSpeakers(speakerList);
       // localStorage に保存済みの名前があれば復元、なければ「ずんだもん」→先頭
       const defaultSpeaker =
-        (selectedSpeakerName ? speakerList.find((s: any) => s.name === selectedSpeakerName) : null)
-        ?? speakerList.find((s: any) => s.name === 'ずんだもん')
-        ?? speakerList[0]
-        ?? null;
+        (selectedSpeakerName ? speakerList.find((s: any) => s.name === selectedSpeakerName) : null) ??
+        speakerList.find((s: any) => s.name === 'ずんだもん') ??
+        speakerList[0] ??
+        null;
       setSelectedSpeaker(defaultSpeaker);
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -128,13 +128,7 @@ export default function Home() {
       );
 
       // ── pending エントリを完成した内容で更新 ──
-      setHistory((prev) =>
-        prev.map((e) =>
-          e.id === entryId
-            ? { ...e, emotion: finalEmotion, replyText: fullReply, pending: false }
-            : e,
-        ),
-      );
+      setHistory((prev) => prev.map((e) => (e.id === entryId ? { ...e, emotion: finalEmotion, replyText: fullReply, pending: false } : e)));
     } finally {
       setIsProcessing(false);
     }
@@ -189,7 +183,6 @@ export default function Home() {
       {/* 入力エリア */}
       <div ref={inputAreaRef} style={inputAreaOuterStyle}>
         <div style={inputAreaInnerStyle}>
-
           {/* 上段: ラベル付きプルダウン（背景 → VRM → AI → ボイス）*/}
           <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '8px' }}>
             <div style={selectorGroupStyle}>

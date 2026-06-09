@@ -126,14 +126,9 @@ const _noopStorage = {
   key: () => null,
 } as unknown as Storage;
 
-const _speakerPersistStorage = createJSONStorage<string | null>(() =>
-  typeof window === 'undefined' ? _noopStorage : localStorage,
-);
+const _speakerPersistStorage = createJSONStorage<string | null>(() => (typeof window === 'undefined' ? _noopStorage : localStorage));
 
 /** 選択中スピーカーの name を永続化する atom */
-export const selectedSpeakerNameAtom = atomWithStorage<string | null>(
-  'selected_speaker_name',
-  null,
-  _speakerPersistStorage,
-  { getOnInit: true },
-);
+export const selectedSpeakerNameAtom = atomWithStorage<string | null>('selected_speaker_name', null, _speakerPersistStorage, {
+  getOnInit: true,
+});

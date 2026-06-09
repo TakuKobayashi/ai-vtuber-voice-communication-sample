@@ -22,9 +22,7 @@ export function BackgroundSelector({ onBackgroundChange }: Props) {
     loadDefaultBackgroundList().then((defaults) => {
       setBackgroundList(defaults);
       // localStorage に保存済みのパスがあれば復元、なければ先頭
-      const restored = selectedBgPath
-        ? (defaults.find((b) => b.url === selectedBgPath) ?? defaults[0])
-        : defaults[0];
+      const restored = selectedBgPath ? (defaults.find((b) => b.url === selectedBgPath) ?? defaults[0]) : defaults[0];
       if (restored) {
         setSelectedBackground(restored);
         onBackgroundChange(restored.url);
@@ -44,11 +42,7 @@ export function BackgroundSelector({ onBackgroundChange }: Props) {
   if (backgroundList.length === 0) return null;
 
   return (
-    <select
-      style={selectStyle}
-      value={selectedBackground?.url ?? ''}
-      onChange={onSelectChange}
-    >
+    <select style={selectStyle} value={selectedBackground?.url ?? ''} onChange={onSelectChange}>
       {backgroundList.map((b: BackgroundEntry) => (
         <option key={b.url} value={b.url}>
           {b.label}

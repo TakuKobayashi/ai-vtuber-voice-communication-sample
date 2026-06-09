@@ -60,11 +60,7 @@ export function SpeakerSelector({ currentEmotion, isProcessing }: Props) {
   return (
     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
       {/* キャラクター選択（スタイルは表示しない） */}
-      <select
-        style={selectStyle}
-        value={selectedSpeaker?.name ?? ''}
-        onChange={onSpeakerChange}
-      >
+      <select style={selectStyle} value={selectedSpeaker?.name ?? ''} onChange={onSpeakerChange}>
         {speakers.map((s: Speaker) => (
           <option key={s.speaker_uuid} value={s.name}>
             {s.name}
@@ -92,7 +88,16 @@ export function SpeakerSelector({ currentEmotion, isProcessing }: Props) {
         >
           {/* 処理中はドット点滅、それ以外は感情ラベル */}
           {isProcessing && (
-            <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: EMOTION_TEXT[currentEmotion], animation: 'blink 1s step-end infinite' }} />
+            <span
+              style={{
+                display: 'inline-block',
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                backgroundColor: EMOTION_TEXT[currentEmotion],
+                animation: 'blink 1s step-end infinite',
+              }}
+            />
           )}
           <span>{EMOTION_LABEL[currentEmotion]}</span>
           <span style={{ opacity: 0.6 }}>／</span>
