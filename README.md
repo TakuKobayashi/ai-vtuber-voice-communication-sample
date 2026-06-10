@@ -10,6 +10,7 @@ https://ai-vtuber-voice-communication-sample.taptappun.workers.dev/
 
 ## 主な機能
 
+- **多言語対応 (i18n)**: 画面左上のタブで日本語 / English を切り替え可能。ブラウザ言語を自動判定してデフォルト設定。選択言語は localStorage に保存され、サーバー側のプロンプトにも反映される
 - **AI 返答 + 音声合成**: テキストを入力すると Groq LLM が返答を生成し、VOICEVOX がアバターの声で読み上げる
 - **感情表現**: LLM が返答と同時に感情（neutral / happy / angry / sad / relaxed）を返し、アバターの表情と VOICEVOX のスタイルに自動反映
 - **ストリーミング再生**: Groq の返答を SSE で受信しながら句読点単位で音声合成を並列実行し、順次再生することで応答を体感的に高速化
@@ -313,6 +314,7 @@ POST /api/groq/chat (SSE)
 |------|------|---------|
 | `voicevox_speakers_cache` | VOICEVOX 話者一覧キャッシュ | 12 時間 |
 | `selected_ai_provider` | 最後に選択した AI プロバイダー（`groq` / `gemini`） | 永続 |
+| `selected_locale` | 表示言語（`ja` / `en`）。未設定時はブラウザ言語から自動判定 | 永続 |
 | `selected_bg_path` | 最後に選択した背景画像のパス | 永続 |
 | `selected_vrm_path` | 最後に選択した VRM のパス（デフォルト VRM のみ） | 永続 |
 | `selected_speaker_name` | 最後に選択した話者名 | 永続 |

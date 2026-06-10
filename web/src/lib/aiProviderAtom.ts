@@ -2,9 +2,9 @@ import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 
 export type AiProvider = 'groq' | 'gemini';
 
-export const AI_PROVIDER_OPTIONS: { value: AiProvider; label: string; description: string }[] = [
-  { value: 'groq', label: 'Groq', description: 'llama-3.3-70b-versatile' },
-  { value: 'gemini', label: 'Gemini', description: 'gemini-2.5-flash-lite' },
+export const AI_PROVIDER_OPTIONS: { value: AiProvider; label: string }[] = [
+  { value: 'groq', label: 'Groq' },
+  { value: 'gemini', label: 'Gemini' },
 ];
 
 const noopStorage = {
@@ -16,10 +16,17 @@ const noopStorage = {
   key: () => null,
 } as unknown as Storage;
 
-const persistStorage = createJSONStorage<AiProvider>(() => (typeof window === 'undefined' ? noopStorage : localStorage));
+const persistStorage = createJSONStorage<AiProvider>(() =>
+  typeof window === 'undefined' ? noopStorage : localStorage,
+);
 
 /** 選択中の AI プロバイダー（localStorage 永続化） */
-export const aiProviderAtom = atomWithStorage<AiProvider>('selected_ai_provider', 'groq', persistStorage, { getOnInit: true });
+export const aiProviderAtom = atomWithStorage<AiProvider>(
+  'selected_ai_provider',
+  'groq',
+  persistStorage,
+  { getOnInit: true },
+);
 
 /** プロバイダーに対応するチャット API のパスを返す */
 export function getApiPath(provider: AiProvider): string {

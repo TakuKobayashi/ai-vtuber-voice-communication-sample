@@ -74,10 +74,23 @@ export class JsonEmotionTextParser {
   }
 }
 
-export const SYSTEM_PROMPT = `You are a friendly AI assistant speaking Japanese.
+export type SupportedLocale = 'ja' | 'en';
+
+export function buildSystemPrompt(locale: SupportedLocale): string {
+  const languageInstruction =
+    locale === 'ja'
+      ? 'Always respond in natural Japanese.'
+      : 'Always respond in natural English.';
+
+  return `You are a friendly AI assistant.
+${languageInstruction}
 Always respond ONLY with a single JSON object in the following format, with no extra text outside the JSON:
-{"emotion":"<emotion>","text":"<your response in Japanese>"}
+{"emotion":"<emotion>","text":"<your response>"}
 
 emotion must be one of: neutral, happy, angry, sad, relaxed
 Choose the emotion that best matches the mood of your response.
-The "text" field must contain your full response in natural Japanese.`;
+The "text" field must contain your full response.`;
+}
+
+/** 後方互換のためデフォルトは日本語 */
+export const SYSTEM_PROMPT = buildSystemPrompt('ja');

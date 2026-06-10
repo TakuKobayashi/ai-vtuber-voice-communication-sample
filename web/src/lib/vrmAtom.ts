@@ -25,7 +25,9 @@ export async function loadDefaultVrmList(): Promise<VrmEntry[]> {
     }));
   } catch (e) {
     console.error('Failed to load assets-manifest.json', e);
-    _defaultVrmList = [{ label: 'Zundamon VRM 10', url: buildUrl('/vrm/Zundamon_VRM_10.vrm'), isCustom: false }];
+    _defaultVrmList = [
+      { label: 'Zundamon VRM 10', url: buildUrl('/vrm/Zundamon_VRM_10.vrm'), isCustom: false },
+    ];
   }
   return _defaultVrmList;
 }
@@ -49,10 +51,17 @@ const noopStorage = {
   key: () => null,
 } as unknown as Storage;
 
-const persistStorage = createJSONStorage<string | null>(() => (typeof window === 'undefined' ? noopStorage : localStorage));
+const persistStorage = createJSONStorage<string | null>(() =>
+  typeof window === 'undefined' ? noopStorage : localStorage,
+);
 
 /**
  * 選択中VRMのパスを永続化する atom。
  * isCustom:true のときは書き込まない（null のまま）。
  */
-export const selectedVrmPathAtom = atomWithStorage<string | null>('selected_vrm_path', null, persistStorage, { getOnInit: true });
+export const selectedVrmPathAtom = atomWithStorage<string | null>(
+  'selected_vrm_path',
+  null,
+  persistStorage,
+  { getOnInit: true },
+);

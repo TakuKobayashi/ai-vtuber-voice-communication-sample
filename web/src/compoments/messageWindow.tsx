@@ -65,7 +65,9 @@ export function MessageWindow({ text, emotion, isProcessing }: Props) {
           {text}
         </span>
         {/* テキストカーソル */}
-        {isProcessing && <span style={cursorStyle}>▼</span>}
+        {isProcessing && (
+          <span style={cursorStyle}>▼</span>
+        )}
       </div>
 
       {/* ── 下部デコレーション ── */}

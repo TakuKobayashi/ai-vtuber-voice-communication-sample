@@ -2,27 +2,18 @@ import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
 import Groq from 'groq-sdk';
 import type { Bindings } from '../bindings';
-import { JsonEmotionTextParser, SYSTEM_PROMPT } from '../lib/sseStreamParser';
+import { JsonEmotionTextParser, buildSystemPrompt, SupportedLocale } from '../lib/sseStreamParser';
 
 const groqRouter = new Hono<{ Bindings: Bindings }>();
 
-/**
- * POST /chat
- *
- * ユーザーメッセージを受け取り、Groq LLM の返答を SSE ストリームで返す。
- *
- * レスポンス形式 (text/event-stream):
- *   data: {"type":"emotion","value":"happy"}  … 感情（最初の1回）
- *   data: {"type":"delta","value":"テキスト"} … 返答テキストの断片
- *   data: [DONE]                              … 終端
- */
 groqRouter.post('/chat', async (c) => {
-  const body = await c.req.json<{ message: string }>();
+  const body = await c.req.json<{ message: string; locale?: string }>();
+  const locale: SupportedLocale = body.locale === 'en' ? 'en' : 'ja';
   const groq = new Groq({ apiKey: c.env.GROQ_API_KEY });
 
   const chatStream = await groq.chat.completions.create({
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: buildSystemPrompt(locale) },
       { role: 'user', content: body.message },
     ],
     model: 'llama-3.3-70b-versatile',

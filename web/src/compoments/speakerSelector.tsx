@@ -1,20 +1,13 @@
 import { useAtom } from 'jotai';
 import { speakersAtom, selectedSpeakerAtom, selectedSpeakerNameAtom, resolveStyleName, Speaker } from '../lib/speakersAtom';
 import { EmotionType } from '../features/vrmViewer/model';
+import { useTranslations } from '../lib/i18n';
 
 type Props = {
   /** 現在の感情（合成中スタイル名の表示に使う） */
   currentEmotion: EmotionType;
   /** 合成処理中かどうか（バッジのアニメーション制御） */
   isProcessing: boolean;
-};
-
-const EMOTION_LABEL: Record<EmotionType, string> = {
-  neutral: 'ノーマル',
-  happy: 'うれしい',
-  angry: 'おこ',
-  sad: 'かなしい',
-  relaxed: 'おだやか',
 };
 
 const EMOTION_COLOR: Record<EmotionType, string> = {
@@ -42,6 +35,14 @@ const EMOTION_TEXT: Record<EmotionType, string> = {
 };
 
 export function SpeakerSelector({ currentEmotion, isProcessing }: Props) {
+  const t = useTranslations();
+  const emotionLabel: Record<EmotionType, string> = {
+    neutral: t.emotionNeutral,
+    happy: t.emotionHappy,
+    angry: t.emotionAngry,
+    sad: t.emotionSad,
+    relaxed: t.emotionRelaxed,
+  };
   const [speakers] = useAtom(speakersAtom);
   const [selectedSpeaker, setSelectedSpeaker] = useAtom(selectedSpeakerAtom);
   const [, setSelectedSpeakerName] = useAtom(selectedSpeakerNameAtom);
@@ -60,7 +61,11 @@ export function SpeakerSelector({ currentEmotion, isProcessing }: Props) {
   return (
     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
       {/* キャラクター選択（スタイルは表示しない） */}
-      <select style={selectStyle} value={selectedSpeaker?.name ?? ''} onChange={onSpeakerChange}>
+      <select
+        style={selectStyle}
+        value={selectedSpeaker?.name ?? ''}
+        onChange={onSpeakerChange}
+      >
         {speakers.map((s: Speaker) => (
           <option key={s.speaker_uuid} value={s.name}>
             {s.name}
@@ -88,18 +93,9 @@ export function SpeakerSelector({ currentEmotion, isProcessing }: Props) {
         >
           {/* 処理中はドット点滅、それ以外は感情ラベル */}
           {isProcessing && (
-            <span
-              style={{
-                display: 'inline-block',
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                backgroundColor: EMOTION_TEXT[currentEmotion],
-                animation: 'blink 1s step-end infinite',
-              }}
-            />
+            <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: EMOTION_TEXT[currentEmotion], animation: 'blink 1s step-end infinite' }} />
           )}
-          <span>{EMOTION_LABEL[currentEmotion]}</span>
+          <span>{emotionLabel[currentEmotion]}</span>
           <span style={{ opacity: 0.6 }}>／</span>
           <span>{currentStyleName}</span>
         </div>

@@ -11,10 +11,12 @@ import { HistoryPanel } from '../compoments/historyPanel';
 import { VrmSelector } from '../compoments/vrmSelector';
 import { BackgroundSelector } from '../compoments/backgroundSelector';
 import { AiProviderSelector } from '../compoments/aiProviderSelector';
+import { LocaleToggle } from '../compoments/localeToggle';
 import { loadSpeackers, speakCharacterStream } from '../features/speak-character';
 import { speakersAtom, selectedSpeakerAtom, selectedSpeakerNameAtom } from '../lib/speakersAtom';
 import { historyAtom } from '../lib/historyAtom';
 import { aiProviderAtom, getApiPath } from '../lib/aiProviderAtom';
+import { localeAtom, useTranslations } from '../lib/i18n';
 import { EmotionType } from '../features/vrmViewer/model';
 
 export default function Home() {
@@ -25,6 +27,8 @@ export default function Home() {
   const [selectedSpeakerName] = useAtom(selectedSpeakerNameAtom);
   const [, setHistory] = useAtom(historyAtom);
   const [aiProvider] = useAtom(aiProviderAtom);
+  const [locale] = useAtom(localeAtom);
+  const t = useTranslations();
 
   const [userMessage, setUserMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -55,10 +59,10 @@ export default function Home() {
       if (!speakers) setSpeakers(speakerList);
       // localStorage に保存済みの名前があれば復元、なければ「ずんだもん」→先頭
       const defaultSpeaker =
-        (selectedSpeakerName ? speakerList.find((s: any) => s.name === selectedSpeakerName) : null) ??
-        speakerList.find((s: any) => s.name === 'ずんだもん') ??
-        speakerList[0] ??
-        null;
+        (selectedSpeakerName ? speakerList.find((s: any) => s.name === selectedSpeakerName) : null)
+        ?? speakerList.find((s: any) => s.name === 'ずんだもん')
+        ?? speakerList[0]
+        ?? null;
       setSelectedSpeaker(defaultSpeaker);
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -103,7 +107,7 @@ export default function Home() {
       const groqChatResponse = await fetch(getApiPath(aiProvider), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: sentMessage }),
+        body: JSON.stringify({ message: sentMessage, locale }),
       });
 
       if (!groqChatResponse.ok) {
@@ -128,7 +132,13 @@ export default function Home() {
       );
 
       // ── pending エントリを完成した内容で更新 ──
-      setHistory((prev) => prev.map((e) => (e.id === entryId ? { ...e, emotion: finalEmotion, replyText: fullReply, pending: false } : e)));
+      setHistory((prev) =>
+        prev.map((e) =>
+          e.id === entryId
+            ? { ...e, emotion: finalEmotion, replyText: fullReply, pending: false }
+            : e,
+        ),
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -162,6 +172,7 @@ export default function Home() {
       )}
 
       <VrmViewer />
+      <LocaleToggle />
 
       {/* 入力エリア高さを渡して履歴パネルが被らないようにする */}
       <HistoryPanel inputAreaHeight={inputAreaHeight} />
@@ -183,22 +194,23 @@ export default function Home() {
       {/* 入力エリア */}
       <div ref={inputAreaRef} style={inputAreaOuterStyle}>
         <div style={inputAreaInnerStyle}>
-          {/* 上段: ラベル付きプルダウン（背景 → VRM → AI → ボイス）*/}
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '8px' }}>
+
+          {/* ツールバー: ラベル+プルダウンを横一直線に並べる */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
             <div style={selectorGroupStyle}>
-              <span style={selectorLabelStyle}>背景</span>
+              <span style={selectorLabelStyle}>{t.labelBackground}</span>
               <BackgroundSelector onBackgroundChange={setBackgroundUrl} />
             </div>
             <div style={selectorGroupStyle}>
-              <span style={selectorLabelStyle}>VRM</span>
+              <span style={selectorLabelStyle}>{t.labelVrm}</span>
               <VrmSelector onVrmChange={onVrmChange} />
             </div>
             <div style={selectorGroupStyle}>
-              <span style={selectorLabelStyle}>AI</span>
+              <span style={selectorLabelStyle}>{t.labelAi}</span>
               <AiProviderSelector />
             </div>
             <div style={selectorGroupStyle}>
-              <span style={selectorLabelStyle}>ボイス</span>
+              <span style={selectorLabelStyle}>{t.labelVoice}</span>
               <SpeakerSelector currentEmotion={currentEmotion} isProcessing={isProcessing} />
             </div>
           </div>
@@ -216,7 +228,7 @@ export default function Home() {
 
             <textarea
               ref={textareaRef}
-              placeholder={'聞きたいことをいれてね\n（Shift+Enterで改行）'}
+              placeholder={t.inputPlaceholder}
               value={userMessage}
               onChange={(e) => setUserMessage(e.target.value)}
               onKeyDown={onKeyDown}
@@ -280,8 +292,9 @@ const textareaStyle: React.CSSProperties = {
 
 const selectorGroupStyle: React.CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
-  gap: '3px',
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: '5px',
 };
 
 const selectorLabelStyle: React.CSSProperties = {

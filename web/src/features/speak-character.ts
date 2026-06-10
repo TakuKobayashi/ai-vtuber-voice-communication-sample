@@ -38,7 +38,10 @@ async function synthesizeAudio(speackerId: number, text: string): Promise<ArrayB
 // SSE ストリームパーサー
 // ----------------------------------------------------------------
 
-export type GroqStreamEvent = { type: 'emotion'; value: EmotionType } | { type: 'delta'; value: string } | { type: 'done' };
+export type GroqStreamEvent =
+  | { type: 'emotion'; value: EmotionType }
+  | { type: 'delta'; value: string }
+  | { type: 'done' };
 
 async function* readGroqStream(response: Response): AsyncGenerator<GroqStreamEvent> {
   const reader = response.body!.getReader();

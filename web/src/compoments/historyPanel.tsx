@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAtom } from 'jotai';
 import { historyAtom, historyPanelOpenAtom, HistoryEntry } from '../lib/historyAtom';
 import { EmotionType } from '../features/vrmViewer/model';
+import { useTranslations } from '../lib/i18n';
 
 const EMOTION_EMOJI: Record<EmotionType, string> = {
   neutral: '😐',
@@ -9,14 +10,6 @@ const EMOTION_EMOJI: Record<EmotionType, string> = {
   angry: '😠',
   sad: '😢',
   relaxed: '😌',
-};
-
-const EMOTION_LABEL: Record<EmotionType, string> = {
-  neutral: 'ノーマル',
-  happy: 'うれしい',
-  angry: 'おこ',
-  sad: 'かなしい',
-  relaxed: 'おだやか',
 };
 
 const EMOTION_BG: Record<EmotionType, string> = {
@@ -46,6 +39,14 @@ type Props = {
 };
 
 export function HistoryPanel({ inputAreaHeight }: Props) {
+  const t = useTranslations();
+  const emotionLabel: Record<EmotionType, string> = {
+    neutral: t.emotionNeutral,
+    happy: t.emotionHappy,
+    angry: t.emotionAngry,
+    sad: t.emotionSad,
+    relaxed: t.emotionRelaxed,
+  };
   const [isOpen, setIsOpen] = useAtom(historyPanelOpenAtom);
   const [history, setHistory] = useAtom(historyAtom);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -58,7 +59,7 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
   }, [history, isOpen]);
 
   const onClear = () => {
-    if (window.confirm('会話履歴をすべて削除しますか？')) {
+    if (window.confirm(t.historyClearConfirm)) {
       setHistory([]);
     }
   };
@@ -92,9 +93,9 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
           transition: 'right 0.3s ease',
           boxShadow: '-2px 0 12px rgba(140,80,220,0.2)',
         }}
-        title={isOpen ? '履歴を閉じる' : '履歴を開く'}
+        title={isOpen ? t.historyToggleTitleClose : t.historyToggleTitleOpen}
       >
-        {isOpen ? '▶ 閉じる' : '◀ 履歴'}
+        {isOpen ? t.historyToggleClose : t.historyToggleOpen}
       </button>
 
       {/* ── 履歴パネル本体 ── */}
@@ -103,7 +104,7 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
           position: 'fixed',
           top: panelTop,
           right: 0,
-          bottom: panelBottom, // ← 入力エリアに被らない
+          bottom: panelBottom,   // ← 入力エリアに被らない
           width: '320px',
           zIndex: 40,
           display: 'flex',
@@ -126,8 +127,12 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
             flexShrink: 0,
           }}
         >
-          <span style={{ color: '#c8b8e8', fontWeight: 700, fontSize: '14px', letterSpacing: '0.1em' }}>💬 会話履歴</span>
-          <span style={{ color: 'rgba(180,150,220,0.5)', fontSize: '12px' }}>{history.length}件</span>
+          <span style={{ color: '#c8b8e8', fontWeight: 700, fontSize: '14px', letterSpacing: '0.1em' }}>
+            {t.historyTitle}
+          </span>
+          <span style={{ color: 'rgba(180,150,220,0.5)', fontSize: '12px' }}>
+            {t.historyCount(history.length)}
+          </span>
         </div>
 
         {/* エントリ一覧 */}
@@ -142,7 +147,9 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
           }}
         >
           {history.length === 0 ? (
-            <p style={{ color: 'rgba(180,150,220,0.4)', textAlign: 'center', fontSize: '13px', marginTop: '40px' }}>まだ会話がありません</p>
+            <p style={{ color: 'rgba(180,150,220,0.4)', textAlign: 'center', fontSize: '13px', marginTop: '40px' }}>
+              {t.historyEmpty}
+            </p>
           ) : (
             history.map((entry: HistoryEntry) => (
               <div
@@ -154,7 +161,9 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
               >
                 {/* タイムスタンプのみ */}
                 <div style={{ marginBottom: '5px' }}>
-                  <span style={{ color: 'rgba(180,150,220,0.45)', fontSize: '11px' }}>{formatTime(entry.timestamp)}</span>
+                  <span style={{ color: 'rgba(180,150,220,0.45)', fontSize: '11px' }}>
+                    {formatTime(entry.timestamp)}
+                  </span>
                 </div>
 
                 {/* ユーザー入力バブル */}
@@ -171,7 +180,9 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
                   }}
                 >
                   {/* 吹き出しヘッダー: "あなた" */}
-                  <span style={{ color: 'rgba(180,150,220,0.55)', fontSize: '10px', display: 'block', marginBottom: '3px' }}>あなた</span>
+                  <span style={{ color: 'rgba(180,150,220,0.55)', fontSize: '10px', display: 'block', marginBottom: '3px' }}>
+                    {t.historyYou}
+                  </span>
                   {entry.userMessage}
                 </div>
 
@@ -202,13 +213,13 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
                     <span style={{ fontWeight: 700 }}>{entry.speakerName}</span>
                     {!entry.pending && (
                       <span>
-                        {EMOTION_EMOJI[entry.emotion]} {EMOTION_LABEL[entry.emotion]}
+                        {EMOTION_EMOJI[entry.emotion]} {emotionLabel[entry.emotion]}
                       </span>
                     )}
                   </span>
                   {entry.pending ? (
                     <span style={{ color: 'rgba(200,170,255,0.4)', fontSize: '12px' }}>
-                      返答を生成中
+                      {t.historyGenerating}
                       <span style={{ animation: 'blink 1s step-end infinite' }}>…</span>
                     </span>
                   ) : (
@@ -244,7 +255,7 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
               transition: 'all 0.2s',
             }}
           >
-            🗑 履歴をクリア
+            {t.historyClear}
           </button>
         </div>
       </div>

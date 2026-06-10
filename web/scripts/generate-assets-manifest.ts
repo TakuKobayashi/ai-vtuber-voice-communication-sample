@@ -55,8 +55,7 @@ function readVrmName(filePath: string, fallback: string): string {
 
 // ファイル名からフォールバック用ラベルを生成
 function toLabel(filename: string): string {
-  return path
-    .basename(filename, path.extname(filename))
+  return path.basename(filename, path.extname(filename))
     .replace(/[_\-]+/g, ' ')
     .trim();
 }
