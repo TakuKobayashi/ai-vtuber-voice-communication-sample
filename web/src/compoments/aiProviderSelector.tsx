@@ -5,11 +5,7 @@ export function AiProviderSelector() {
   const [provider, setProvider] = useAtom(aiProviderAtom);
 
   return (
-    <select
-      style={selectStyle}
-      value={provider}
-      onChange={(e) => setProvider(e.target.value as AiProvider)}
-    >
+    <select style={selectStyle} value={provider} onChange={(e) => setProvider(e.target.value as AiProvider)}>
       {AI_PROVIDER_OPTIONS.map((opt) => (
         <option key={opt.value} value={opt.value}>
           {opt.label}

@@ -19,9 +19,7 @@ export function VrmSelector({ onVrmChange }: Props) {
     if (vrmList.length > 0) return;
     loadDefaultVrmList().then((defaults) => {
       setVrmList(defaults);
-      const restored = selectedVrmPath
-        ? (defaults.find((v) => v.url === selectedVrmPath) ?? defaults[0])
-        : defaults[0];
+      const restored = selectedVrmPath ? (defaults.find((v) => v.url === selectedVrmPath) ?? defaults[0]) : defaults[0];
       if (restored) {
         setSelectedVrm(restored);
         onVrmChange(restored.url);
@@ -96,13 +94,7 @@ export function VrmSelector({ onVrmChange }: Props) {
         <option value="__add__">{t.vrmAddOption}</option>
       </select>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".vrm"
-        style={{ display: 'none' }}
-        onChange={onFileChange}
-      />
+      <input ref={fileInputRef} type="file" accept=".vrm" style={{ display: 'none' }} onChange={onFileChange} />
 
       {/* ── VRM追加モーダル ── */}
       {modalOpen && (
@@ -134,9 +126,7 @@ export function VrmSelector({ onVrmChange }: Props) {
           >
             {/* モーダルヘッダー */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#c8b8e8', fontWeight: 700, fontSize: '15px', letterSpacing: '0.05em' }}>
-                {t.vrmModalTitle}
-              </span>
+              <span style={{ color: '#c8b8e8', fontWeight: 700, fontSize: '15px', letterSpacing: '0.05em' }}>{t.vrmModalTitle}</span>
               <button
                 onClick={() => setModalOpen(false)}
                 style={{
@@ -173,12 +163,8 @@ export function VrmSelector({ onVrmChange }: Props) {
               <div style={{ color: isDragOver ? '#e0c8ff' : '#b8a0d8', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>
                 {t.vrmDropZoneMain}
               </div>
-              <div style={{ color: 'rgba(180,150,220,0.5)', fontSize: '12px' }}>
-                {t.vrmDropZoneSub}
-              </div>
-              <div style={{ color: 'rgba(160,130,200,0.4)', fontSize: '11px', marginTop: '8px' }}>
-                {t.vrmDropZoneFormat}
-              </div>
+              <div style={{ color: 'rgba(180,150,220,0.5)', fontSize: '12px' }}>{t.vrmDropZoneSub}</div>
+              <div style={{ color: 'rgba(160,130,200,0.4)', fontSize: '11px', marginTop: '8px' }}>{t.vrmDropZoneFormat}</div>
             </div>
 
             {/* {t.vrmModalCancel}ボタン */}

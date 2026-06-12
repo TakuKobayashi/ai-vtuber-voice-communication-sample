@@ -104,7 +104,7 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
           position: 'fixed',
           top: panelTop,
           right: 0,
-          bottom: panelBottom,   // ← 入力エリアに被らない
+          bottom: panelBottom, // ← 入力エリアに被らない
           width: '320px',
           zIndex: 40,
           display: 'flex',
@@ -127,12 +127,8 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
             flexShrink: 0,
           }}
         >
-          <span style={{ color: '#c8b8e8', fontWeight: 700, fontSize: '14px', letterSpacing: '0.1em' }}>
-            {t.historyTitle}
-          </span>
-          <span style={{ color: 'rgba(180,150,220,0.5)', fontSize: '12px' }}>
-            {t.historyCount(history.length)}
-          </span>
+          <span style={{ color: '#c8b8e8', fontWeight: 700, fontSize: '14px', letterSpacing: '0.1em' }}>{t.historyTitle}</span>
+          <span style={{ color: 'rgba(180,150,220,0.5)', fontSize: '12px' }}>{t.historyCount(history.length)}</span>
         </div>
 
         {/* エントリ一覧 */}
@@ -147,9 +143,7 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
           }}
         >
           {history.length === 0 ? (
-            <p style={{ color: 'rgba(180,150,220,0.4)', textAlign: 'center', fontSize: '13px', marginTop: '40px' }}>
-              {t.historyEmpty}
-            </p>
+            <p style={{ color: 'rgba(180,150,220,0.4)', textAlign: 'center', fontSize: '13px', marginTop: '40px' }}>{t.historyEmpty}</p>
           ) : (
             history.map((entry: HistoryEntry) => (
               <div
@@ -161,9 +155,7 @@ export function HistoryPanel({ inputAreaHeight }: Props) {
               >
                 {/* タイムスタンプのみ */}
                 <div style={{ marginBottom: '5px' }}>
-                  <span style={{ color: 'rgba(180,150,220,0.45)', fontSize: '11px' }}>
-                    {formatTime(entry.timestamp)}
-                  </span>
+                  <span style={{ color: 'rgba(180,150,220,0.45)', fontSize: '11px' }}>{formatTime(entry.timestamp)}</span>
                 </div>
 
                 {/* ユーザー入力バブル */}

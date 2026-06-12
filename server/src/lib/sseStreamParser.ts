@@ -77,10 +77,7 @@ export class JsonEmotionTextParser {
 export type SupportedLocale = 'ja' | 'en';
 
 export function buildSystemPrompt(locale: SupportedLocale): string {
-  const languageInstruction =
-    locale === 'ja'
-      ? 'Always respond in natural Japanese.'
-      : 'Always respond in natural English.';
+  const languageInstruction = locale === 'ja' ? 'Always respond in natural Japanese.' : 'Always respond in natural English.';
 
   return `You are a friendly AI assistant.
 ${languageInstruction}

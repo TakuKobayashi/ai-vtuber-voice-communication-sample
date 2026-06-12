@@ -43,14 +43,7 @@ const noopStorage = {
   key: () => null,
 } as unknown as Storage;
 
-const persistStorage = createJSONStorage<string | null>(() =>
-  typeof window === 'undefined' ? noopStorage : localStorage,
-);
+const persistStorage = createJSONStorage<string | null>(() => (typeof window === 'undefined' ? noopStorage : localStorage));
 
 /** 選択中背景のパスを永続化する atom */
-export const selectedBackgroundPathAtom = atomWithStorage<string | null>(
-  'selected_bg_path',
-  null,
-  persistStorage,
-  { getOnInit: true },
-);
+export const selectedBackgroundPathAtom = atomWithStorage<string | null>('selected_bg_path', null, persistStorage, { getOnInit: true });

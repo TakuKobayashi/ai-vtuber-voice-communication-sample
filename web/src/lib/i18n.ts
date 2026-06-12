@@ -136,9 +136,7 @@ const noopStorage = {
   key: () => null,
 } as unknown as Storage;
 
-const localeStorage = createJSONStorage<Locale>(() =>
-  typeof window === 'undefined' ? noopStorage : localStorage,
-);
+const localeStorage = createJSONStorage<Locale>(() => (typeof window === 'undefined' ? noopStorage : localStorage));
 
 export const localeAtom = atomWithStorage<Locale>(
   'selected_locale',

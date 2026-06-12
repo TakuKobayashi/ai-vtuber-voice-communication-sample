@@ -48,9 +48,7 @@ export function LocaleToggle() {
             fontWeight: locale === l.value ? 700 : 400,
             cursor: 'pointer',
             border: 'none',
-            backgroundColor: locale === l.value
-              ? 'rgba(140,90,220,0.85)'
-              : 'rgba(20,12,40,0.80)',
+            backgroundColor: locale === l.value ? 'rgba(140,90,220,0.85)' : 'rgba(20,12,40,0.80)',
             color: locale === l.value ? '#fff' : 'rgba(200,170,240,0.6)',
             transition: 'all 0.15s ease',
             letterSpacing: '0.03em',
